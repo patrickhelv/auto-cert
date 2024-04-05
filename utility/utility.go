@@ -10,12 +10,20 @@ import (
 	"strings"
 )
 
-type Certificate struct {
-	Cert string `yaml:"certificate"`
+type CaCertification struct {
+	Carcert string `yaml:"ca-cert"`
 }
 
-type Key struct {
-	Private_key string `yaml:"private_key"`
+type ClientCertification struct {
+	ClientCert string `yaml:"client-cert"`
+}
+
+type CaPKey struct {
+	Cakey string `yaml:"ca-key"`
+}
+
+type ClientPKey struct {
+	ClientKey string `yaml:"client-key"`
 }
 
 // Reads a specified config files
@@ -105,9 +113,9 @@ func EncodeToPEM(certBytes []byte, isCert bool) string {
 	return pemBuf.String()
 }
 
-func DecodeYamlCert(decryptedContent string) (Certificate, error) {
+func DecodeYamlCertCa(decryptedContent string) (CaCertification, error) {
 
-	var cert Certificate
+	var cert CaCertification
 
 	err := yaml.Unmarshal([]byte(decryptedContent), &cert)
 	if err != nil {
@@ -118,9 +126,22 @@ func DecodeYamlCert(decryptedContent string) (Certificate, error) {
 	return cert, err
 }
 
-func DecodeYamlKey(decryptedContent string) (Key, error) {
+func DecodeYamlClientCa(decryptedContent string) (ClientCertification, error) {
 
-	var key Key
+	var cert ClientCertification
+
+	err := yaml.Unmarshal([]byte(decryptedContent), &cert)
+	if err != nil {
+		fmt.Println(err)
+		return cert, err
+	}
+
+	return cert, err
+}
+
+func DecodeYamlCaKey(decryptedContent string) (CaPKey, error) {
+
+	var key CaPKey
 
 	err := yaml.Unmarshal([]byte(decryptedContent), &key)
 	if err != nil {
@@ -129,4 +150,39 @@ func DecodeYamlKey(decryptedContent string) (Key, error) {
 	}
 
 	return key, err
+}
+
+func DecodeYamlClientKey(decryptedContent string) (ClientPKey, error) {
+
+	var key ClientPKey
+
+	err := yaml.Unmarshal([]byte(decryptedContent), &key)
+	if err != nil {
+		fmt.Println(err)
+		return key, err
+	}
+
+	return key, err
+}
+
+func CheckIfFileExists(path string, name string) bool {
+
+	if _, err := os.Stat(path + "/" + name + ".yaml"); os.IsNotExist(err) {
+		return false
+	} else {
+		return true
+	}
+
+}
+
+func RemoveFile(path string, name string) bool {
+	
+	err := os.Remove(path+"/"+name+".yaml")
+	
+	if err != nil {
+		fmt.Printf("Did not delete file %s/%s", path, name)
+		return false
+	}
+
+	return true
 }

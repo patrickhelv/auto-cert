@@ -7,7 +7,7 @@ import (
 	"os"
 )
 
-func EncryptWithAnsibleVault(vaultPasswordFile, data, variableName string, path string) (error) {
+func EncryptWithAnsibleVault(vaultPasswordFile string, data string, variableName string, path string) (error) {
     cmd := exec.Command("ansible-vault", "encrypt_string", "--vault-password-file", vaultPasswordFile, data, "--name", variableName)
 
     var out bytes.Buffer
