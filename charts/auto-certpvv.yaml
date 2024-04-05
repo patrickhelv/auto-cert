@@ -1,0 +1,10 @@
+volumes:
+  - name: ansible-vault-volume
+    persistentVolumeClaim:
+      claimName: host-pvc
+containers:
+  - name: my-container
+    image: my-image
+    volumeMounts:
+    - name: ansible-vault-volume
+      mountPath: "/mnt"

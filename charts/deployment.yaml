@@ -1,0 +1,28 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: auto-cert
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: certificate-generator
+  template:
+    metadata:
+      labels:
+        app: certificate-generator
+    spec:
+      containers:
+      - name: certificate-generator
+        image: your-image-name
+        env:
+        - name: VAULT_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: ansible-vault-password
+              key: password
+      volumes:
+        - name: certificates
+          persistentVolumeClaim:
+            claimName: certificate-pvc
+      restartPolicy: Always
