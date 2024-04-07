@@ -13,8 +13,8 @@ spec:
         app: autocert
     spec:
       containers:
-      - name: autocert
-        image: localhost:5000/autocert:latest
+      - name: auto-cert
+        image: localhost:5000/auto-cert:latest
         ports:
         - containerPort: 7000
         volumeMounts:
