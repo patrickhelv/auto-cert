@@ -167,7 +167,7 @@ func DecodeYamlClientKey(decryptedContent string) (ClientPKey, error) {
 
 func CheckIfFileExists(path string, name string) bool {
 
-	if _, err := os.Stat(path + "/" + name + ".yaml"); os.IsNotExist(err) {
+	if _, err := os.Stat(path + name + ".yaml"); os.IsNotExist(err) {
 		return false
 	} else {
 		return true
@@ -177,7 +177,7 @@ func CheckIfFileExists(path string, name string) bool {
 
 func RemoveFile(path string, name string) bool {
 	
-	err := os.Remove(path+"/"+name+".yaml")
+	err := os.Remove(path + name + ".yaml")
 	
 	if err != nil {
 		fmt.Printf("Did not delete file %s/%s", path, name)
