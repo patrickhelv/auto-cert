@@ -11,5 +11,5 @@ spec:
   persistentVolumeReclaimPolicy: Retain
   storageClassName: manual
   hostPath:
-    path: /data/ansible-vault
+    path: /home/pitemp/ansible-vault
     type: DirectoryOrCreate
