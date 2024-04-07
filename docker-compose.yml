@@ -1,0 +1,7 @@
+services:
+  autocert:
+    stdin_open: true # docker run -i
+    tty: true        # docker run -t
+    build: .
+    volumes:
+      - /home/pitemp/ansible-vault/:/mnt/
