@@ -4,6 +4,8 @@ import (
 	"bufio"
 	"bytes"
 	"encoding/pem"
+	"crypto/x509"
+	"crypto/ecdsa"
 	"fmt"
 	"gopkg.in/yaml.v2"
 	"os"
@@ -31,9 +33,7 @@ type TokenPKey struct {
 }
 
 type Token struct {
-    Auth struct {
-        JwtToken string `yaml:"jwt_token"`
-    } `yaml:"auth"`
+	Token string `yaml:"token"`
 }
 
 // Reads a specified config files
@@ -101,16 +101,63 @@ func FetchConfigFile(configFile string) ([]string, error) {
 	return result, nil
 }
 
-// Function to encode certificate or key bytes to PEM format
-func EncodeToPEM(certBytes []byte, isCert bool) string {
-	pemType := "CERTIFICATE"
-	if !isCert {
-		pemType = "PRIVATE KEY" // Adjust this based on the actual type of key (RSA PRIVATE KEY, EC PRIVATE KEY, etc.)
+// Function to encode private key to PEM format
+func EncodeToPEMPK(privateKey *ecdsa.PrivateKey) string {
+	pemType := "EC PRIVATE KEY"
+
+	data, err := x509.MarshalECPrivateKey(privateKey)
+	if err != nil {
+		fmt.Printf("Error marshalling ECDSA key to ASN.1 DER form: %v\n", err)
+		return ""
 	}
 
 	pemBlock := &pem.Block{
 		Type:  pemType,
-		Bytes: certBytes,
+		Bytes: data,
+	}
+
+	var pemBuf bytes.Buffer
+	err = pem.Encode(&pemBuf, pemBlock)
+	if err != nil {
+		fmt.Printf("Error encoding to PEM: %v\n", err)
+		return ""
+	}
+
+	return pemBuf.String()
+}
+
+// Function to encode a public key to PEM format
+func EncodeToPEMPubK(publicKey *ecdsa.PublicKey) string {
+	pemType := "PUBLIC KEY"
+
+	data, err := x509.MarshalPKIXPublicKey(publicKey)
+	if err != nil {
+		fmt.Printf("Error marshalling ECDSA key to ASN.1 DER form: %v\n", err)
+		return ""
+	}
+
+	pemBlock := &pem.Block{
+		Type:  pemType,
+		Bytes: data,
+	}
+
+	var pemBuf bytes.Buffer
+	err = pem.Encode(&pemBuf, pemBlock)
+	if err != nil {
+		fmt.Printf("Error encoding to PEM: %v\n", err)
+		return ""
+	}
+
+	return pemBuf.String()
+}
+
+// Function to encode certificate or key bytes to PEM format
+func EncodeToPEMCert(Bytes []byte) string {
+	pemType := "CERTIFICATE"
+
+	pemBlock := &pem.Block{
+		Type:  pemType,
+		Bytes: Bytes,
 	}
 
 	var pemBuf bytes.Buffer
@@ -123,11 +170,17 @@ func EncodeToPEM(certBytes []byte, isCert bool) string {
 	return pemBuf.String()
 }
 
-func DecodeYamlCertCa(decryptedContent string) (CaCertification, error) {
+func DecodeYamlCertCa(filePath string) (CaCertification, error) {
 
 	var cert CaCertification
 
-	err := yaml.Unmarshal([]byte(decryptedContent), &cert)
+	data, err := os.ReadFile(filePath)
+	if err != nil {
+		fmt.Printf("error reading file: %v", err)
+		return cert, err
+	}
+
+	err = yaml.Unmarshal([]byte(data), &cert)
 	if err != nil {
 		fmt.Println(err)
 		return cert, err
@@ -136,11 +189,17 @@ func DecodeYamlCertCa(decryptedContent string) (CaCertification, error) {
 	return cert, nil
 }
 
-func DecodeYamlClientCa(decryptedContent string) (ClientCertification, error) {
+func DecodeYamlClientCert(filePath string) (ClientCertification, error) {
 
 	var cert ClientCertification
 
-	err := yaml.Unmarshal([]byte(decryptedContent), &cert)
+	data, err := os.ReadFile(filePath)
+	if err != nil {
+		fmt.Printf("error reading file: %v", err)
+		return cert, err
+	}
+
+	err = yaml.Unmarshal([]byte(data), &cert)
 	if err != nil {
 		fmt.Println(err)
 		return cert, err
@@ -149,11 +208,17 @@ func DecodeYamlClientCa(decryptedContent string) (ClientCertification, error) {
 	return cert, nil
 }
 
-func DecodeYamlCaKey(decryptedContent string) (CaPKey, error) {
+func DecodeYamlCaKey(filePath string) (CaPKey, error) {
 
 	var key CaPKey
 
-	err := yaml.Unmarshal([]byte(decryptedContent), &key)
+	data, err := os.ReadFile(filePath)
+	if err != nil {
+		fmt.Printf("error reading file: %v", err)
+		return key, err
+	}
+
+	err = yaml.Unmarshal([]byte(data), &key)
 	if err != nil {
 		fmt.Println(err)
 		return key, err
@@ -162,11 +227,17 @@ func DecodeYamlCaKey(decryptedContent string) (CaPKey, error) {
 	return key, nil
 }
 
-func DecodeYamlClientKey(decryptedContent string) (ClientPKey, error) {
+func DecodeYamlClientKey(filePath string) (ClientPKey, error) {
 
 	var key ClientPKey
 
-	err := yaml.Unmarshal([]byte(decryptedContent), &key)
+	data, err := os.ReadFile(filePath)
+	if err != nil {
+		fmt.Printf("error reading file: %v", err)
+		return key, err
+	}
+
+	err = yaml.Unmarshal([]byte(data), &key)
 	if err != nil {
 		fmt.Println(err)
 		return key, err
@@ -175,11 +246,17 @@ func DecodeYamlClientKey(decryptedContent string) (ClientPKey, error) {
 	return key, nil
 }
 
-func DecodeYamlTokenKey(decryptedContent string) (TokenPKey, error) {
+func DecodeYamlTokenKey(filePath string) (TokenPKey, error) {
 
 	var key TokenPKey
 
-	err := yaml.Unmarshal([]byte(decryptedContent), &key)
+	data, err := os.ReadFile(filePath)
+	if err != nil {
+		fmt.Printf("error reading file: %v", err)
+		return key, err
+	}
+
+	err = yaml.Unmarshal([]byte(data), &key)
 	if err != nil {
 		fmt.Println(err)
 		return key, err
@@ -188,11 +265,17 @@ func DecodeYamlTokenKey(decryptedContent string) (TokenPKey, error) {
 	return key, nil
 }
 
-func DecodeToken(decryptedContent string) (Token, error) {
+func DecodeToken(filePath string) (Token, error) {
 
 	var token Token
 
-	err := yaml.Unmarshal([]byte(decryptedContent), &token)
+	data, err := os.ReadFile(filePath)
+	if err != nil {
+		fmt.Printf("error reading file: %v", err)
+		return token, err
+	}
+
+	err = yaml.Unmarshal([]byte(data), &token)
 	if err != nil {
 		fmt.Println(err)
 		return token, err

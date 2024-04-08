@@ -85,11 +85,32 @@ func PemToECDSA(pemData string) (*ecdsa.PrivateKey, error) {
 	if block == nil {
 		return nil, fmt.Errorf("failed to decode PEM block")
 	}
-
+	
 	key, err := x509.ParseECPrivateKey(block.Bytes)
 	if err != nil {
+		fmt.Println(err)
 		return nil, err
 	}
 
 	return key, nil
+}
+
+func PemToECDSAPub(pemData string) (*ecdsa.PublicKey, error) {
+	block, _ := pem.Decode([]byte(pemData))
+	if block == nil {
+		return nil, fmt.Errorf("failed to decode PEM block")
+	}
+	
+	key, err := x509.ParsePKIXPublicKey(block.Bytes)
+	if err != nil {
+		fmt.Println(err)
+		return nil, err
+	}
+
+	ecdsaPub, ok := key.(*ecdsa.PublicKey)
+	if !ok {
+		return nil, fmt.Errorf("key is not of type ECDSA")
+	}
+
+	return ecdsaPub, nil
 }

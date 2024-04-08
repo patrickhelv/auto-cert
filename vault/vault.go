@@ -12,10 +12,11 @@ func EncryptWithAnsibleVault(vaultPasswordFile string, data string, variableName
 
 	var out bytes.Buffer
 	cmd.Stdout = &out
+	cmd.Stderr = &out // Capture any error output
 
 	err := cmd.Run()
 	if err != nil {
-		fmt.Printf("failed to encrypt file: %v\n", err)
+		fmt.Printf("failed to encrypt file: %v\n, output %s", err, out.String())
 		return err
 	}
 
@@ -30,15 +31,31 @@ func EncryptWithAnsibleVault(vaultPasswordFile string, data string, variableName
 }
 
 // decryptAnsibleVaultFile uses ansible-vault to decrypt a file and returns its content.
-func DecryptAnsibleVaultFile(filePath, vaultPasswordFile string) (string, error) {
-	cmd := exec.Command("ansible-vault", "view", filePath, "--vault-password-file", vaultPasswordFile)
+func DecryptAnsibleVaultFile(encryptedString string, vaultPasswordFile string) (string, error) {
+
+	tmpfile, err := os.CreateTemp("", "ansible-vault-*.yml")
+	if err != nil {
+		return "", fmt.Errorf("creating temp file: %v", err)
+	}
+	defer os.Remove(tmpfile.Name()) // Clean up the file afterwards
+
+	if _, err := tmpfile.Write([]byte(encryptedString)); err != nil {
+		tmpfile.Close()
+		return "", fmt.Errorf("writing to temp file: %v", err)
+	}
+	if err := tmpfile.Close(); err != nil {
+		return "", fmt.Errorf("closing temp file: %v", err)
+	}
+
+	cmd := exec.Command("ansible-vault", "view", tmpfile.Name(), "--vault-password-file", vaultPasswordFile)
 
 	var out bytes.Buffer
 	cmd.Stdout = &out
+	cmd.Stderr = &out // Capture any error output for diagnostics
 
-	err := cmd.Run()
+	err = cmd.Run()
 	if err != nil {
-		return "", fmt.Errorf("failed to decrypt file: %v", err)
+		return "", fmt.Errorf("failed to decrypt file: %v, output %s", err, out.String())
 	}
 
 	return out.String(), nil
