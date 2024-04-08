@@ -26,6 +26,16 @@ type ClientPKey struct {
 	ClientKey string `yaml:"client-key"`
 }
 
+type TokenPKey struct {
+	TokenKey string `yaml:"token-key"`
+}
+
+type Token struct {
+    Auth struct {
+        JwtToken string `yaml:"jwt_token"`
+    } `yaml:"auth"`
+}
+
 // Reads a specified config files
 // returns (nil, error) if the an error happens while reading
 // returns (map[string]string, nil) if the reading of the file is successfull
@@ -123,7 +133,7 @@ func DecodeYamlCertCa(decryptedContent string) (CaCertification, error) {
 		return cert, err
 	}
 
-	return cert, err
+	return cert, nil
 }
 
 func DecodeYamlClientCa(decryptedContent string) (ClientCertification, error) {
@@ -136,7 +146,7 @@ func DecodeYamlClientCa(decryptedContent string) (ClientCertification, error) {
 		return cert, err
 	}
 
-	return cert, err
+	return cert, nil
 }
 
 func DecodeYamlCaKey(decryptedContent string) (CaPKey, error) {
@@ -149,7 +159,7 @@ func DecodeYamlCaKey(decryptedContent string) (CaPKey, error) {
 		return key, err
 	}
 
-	return key, err
+	return key, nil
 }
 
 func DecodeYamlClientKey(decryptedContent string) (ClientPKey, error) {
@@ -162,8 +172,36 @@ func DecodeYamlClientKey(decryptedContent string) (ClientPKey, error) {
 		return key, err
 	}
 
-	return key, err
+	return key, nil
 }
+
+func DecodeYamlTokenKey(decryptedContent string) (TokenPKey, error) {
+
+	var key TokenPKey
+
+	err := yaml.Unmarshal([]byte(decryptedContent), &key)
+	if err != nil {
+		fmt.Println(err)
+		return key, err
+	}
+
+	return key, nil
+}
+
+func DecodeToken(decryptedContent string) (Token, error) {
+
+	var token Token
+
+	err := yaml.Unmarshal([]byte(decryptedContent), &token)
+	if err != nil {
+		fmt.Println(err)
+		return token, err
+	}
+
+	return token, nil
+}
+
+
 
 func CheckIfFileExists(path string, name string) bool {
 
@@ -176,9 +214,9 @@ func CheckIfFileExists(path string, name string) bool {
 }
 
 func RemoveFile(path string, name string) bool {
-	
+
 	err := os.Remove(path + name + ".yaml")
-	
+
 	if err != nil {
 		fmt.Printf("Did not delete file %s/%s", path, name)
 		return false

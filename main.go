@@ -5,6 +5,7 @@ import (
 	"auto-cert/client-gen"
 	"auto-cert/utility"
 	"auto-cert/vault"
+	"auto-cert/token-gen"
 	"crypto/ecdsa"
 	"crypto/elliptic"
 	"crypto/x509"
@@ -155,6 +156,42 @@ func generateNewClients(caKeyYML string, certCA utility.CaCertification, msg str
 	return true
 }
 
+func generateToken(msg string, path string) (bool){
+
+	tokenKey, err := client.GenerateECDSAeKey(elliptic.P256())
+
+	if err != nil {
+		fmt.Println("There was an error generating the token private key")
+		return false
+	}
+
+	tokenStr := tokengen.GenerateJWT(tokenKey)
+
+	if tokenStr == ""{
+		fmt.Println("There was an error generating the JWT token")
+		return false
+	}
+
+	tokenKeyStr := utility.EncodeToPEM(tokenKey.D.Bytes(), false)
+
+	err = vault.EncryptWithAnsibleVault(msg, tokenKeyStr, "token-key", path)
+	
+	if err != nil {
+		fmt.Println("There was an error encrypting the token key")
+		return false
+	}
+
+	err = vault.EncryptWithAnsibleVault(msg, tokenStr, "token", path)
+	
+	if err != nil {
+		fmt.Println("There was an error encrypting the token")
+		return false
+	}
+
+	return true
+
+}
+
 func checkExpiryLoop(msg string, path string) {
 
 	status := true
@@ -163,6 +200,57 @@ func checkExpiryLoop(msg string, path string) {
 		fmt.Println("Checking expiry...")
 
 		time.Sleep(36 * time.Hour)
+
+		tokenKeyYML, err := vault.DecryptAnsibleVaultFile(path+"token-key.yaml", msg)
+		if err != nil {
+			status = false
+			fmt.Println("There was something wrong decrypting the token key")
+		}
+
+		tokenKeyPEM, err := utility.DecodeYamlTokenKey(tokenKeyYML)
+		if err != nil {
+			status = false
+			fmt.Println("There was something wrong decoding the token key")
+		}
+
+		tokenKey, err := ca.PemToECDSA(tokenKeyPEM.TokenKey)
+		if err != nil {
+			status = false
+			fmt.Println("There was something wrong translating to pem for the ca key")
+		}
+
+		tokenYML, err := vault.DecryptAnsibleVaultFile(path+"token.yaml", msg)
+		if err != nil {
+			status = false
+			fmt.Println("There was something wrong decrypting the token")
+		}
+
+		token, err := utility.DecodeToken(tokenYML)
+		if err != nil {
+			status = false
+			fmt.Println("There was something wrong decoding the token")
+		}
+		
+		expired, err := tokengen.CheckTokenExpiry(token.Auth.JwtToken, &tokenKey.PublicKey)
+
+		if err != nil {
+			status = false
+			fmt.Println("There was something wrong checking the token expiry")
+		}
+
+
+		if expired{
+
+			remstate1 := utility.RemoveFile(path, "token-key")
+			remstate2 := utility.RemoveFile(path, "token")
+
+			if remstate1 && remstate2{
+				status = false
+				break
+			}
+
+			status = generateToken(msg, path)
+		}
 
 		caCertYML, err := vault.DecryptAnsibleVaultFile(path+"ca-cert.yaml", msg)
 		if err != nil {
@@ -196,7 +284,7 @@ func checkExpiryLoop(msg string, path string) {
 			fmt.Println("There was something wrong decoding the yaml files")
 		}
 
-		expired, err := ca.CheckCertExpiry(certClient.ClientCert, 36*time.Hour)
+		expired, err = ca.CheckCertExpiry(certClient.ClientCert, 36*time.Hour)
 
 		if err != nil {
 			status = false
@@ -264,6 +352,19 @@ func main() {
 			return
 		}
 	}
+
+	if !utility.CheckIfFileExists(path, "token-key") && !utility.CheckIfFileExists(path, "token"){
+
+		status := generateToken(msg, path)
+
+		fmt.Println("Generating token key and token for the first time")
+
+		if !status {
+			fmt.Println("Error creating certificates for the first time please verify check if something is wrong")
+			return
+		}
+	}
+	
 
 	checkExpiryLoop(msg, path)
 
