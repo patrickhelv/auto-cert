@@ -2,7 +2,7 @@
 
 ## Description
 
-Auto cert is an application that automatically creates a CA, a client cert and a client key, encrypts it using ansible-vault and stores the encrypted files on the host system (~/ansible-vault/).
+Auto cert is an application that automatically creates a CA, a client cert and a client key, encrypts it using ansible-vault and stores the encrypted files on the host system (~/ansible-vault/). It also generates a JWT token that is used to authentication purposes. The token is also encrypted and stored in the ansible-vault. 
 
 
 ## Requirements
@@ -16,7 +16,7 @@ Auto cert is an application that automatically creates a CA, a client cert and a
 
 ### Create your ansible-vault
 
-You need to create your ansible-vault after you have installed ansible-vault
+You need to create your ansible-vault after you have installed ansible
 
 ```bash
 mkdir -p ~/ansible-vault
