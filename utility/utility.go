@@ -13,23 +13,23 @@ import (
 )
 
 type CaCertification struct {
-	Carcert string `yaml:"ca-cert"`
+	Carcert string `yaml:"ca_cert"`
 }
 
 type ClientCertification struct {
-	ClientCert string `yaml:"client-cert"`
+	ClientCert string `yaml:"client_cert"`
 }
 
 type CaPKey struct {
-	Cakey string `yaml:"ca-key"`
+	Cakey string `yaml:"ca_key"`
 }
 
 type ClientPKey struct {
-	ClientKey string `yaml:"client-key"`
+	ClientKey string `yaml:"client_key"`
 }
 
 type TokenPKey struct {
-	TokenKey string `yaml:"token-key"`
+	TokenKey string `yaml:"token_key"`
 }
 
 type Token struct {

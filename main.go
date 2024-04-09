@@ -72,7 +72,7 @@ func generateCertificatesCaClient(msg string, path string) bool {
 
 	fmt.Println("Generating Certificates..")
 
-	err := vault.EncryptWithAnsibleVault(msg, caCertPem, "ca-cert", path)
+	err := vault.EncryptWithAnsibleVault(msg, caCertPem, "ca_cert", path)
 	if err != nil {
 		fmt.Println("There was an error generating the client certificate")
 		return false
@@ -80,7 +80,7 @@ func generateCertificatesCaClient(msg string, path string) bool {
 
 	fmt.Println("Generated CA cert")
 
-	err = vault.EncryptWithAnsibleVault(msg, caKeyPem, "ca-key", path)
+	err = vault.EncryptWithAnsibleVault(msg, caKeyPem, "ca_key", path)
 	if err != nil {
 		fmt.Println("There was an error generating the client certificate")
 		return false
@@ -88,7 +88,7 @@ func generateCertificatesCaClient(msg string, path string) bool {
 
 	fmt.Println("Generated CA key")
 
-	err = vault.EncryptWithAnsibleVault(msg, clientCertPem, "client-cert", path)
+	err = vault.EncryptWithAnsibleVault(msg, clientCertPem, "client_cert", path)
 
 	if err != nil {
 		fmt.Println("There was an error generating the client certificate")
@@ -97,7 +97,7 @@ func generateCertificatesCaClient(msg string, path string) bool {
 
 	fmt.Println("Generated client cert")
 
-	err = vault.EncryptWithAnsibleVault(msg, clientKey, "client-key", path)
+	err = vault.EncryptWithAnsibleVault(msg, clientKey, "client_key", path)
 
 	if err != nil {
 		fmt.Println("There was an error generating the client certificate")
@@ -134,14 +134,14 @@ func generateNewClients(caKey string, certCA string, msg string, path string) bo
 
 	clientKey := utility.EncodeToPEMPK(clientkey)
 
-	err = vault.EncryptWithAnsibleVault(msg, clientCertPem, "client-cert", path)
+	err = vault.EncryptWithAnsibleVault(msg, clientCertPem, "client_cert", path)
 
 	if err != nil {
 		fmt.Println("There was an error generating the client certificate")
 		return false
 	}
 
-	err = vault.EncryptWithAnsibleVault(msg, clientKey, "client-key", path)
+	err = vault.EncryptWithAnsibleVault(msg, clientKey, "client_key", path)
 
 	if err != nil {
 		fmt.Println("There was an error generating the client certificate")
@@ -171,7 +171,7 @@ func generateToken(msg string, path string) bool {
 
 	tokenKeyStr := utility.EncodeToPEMPubK(&tokenKey.PublicKey)
 
-	err = vault.EncryptWithAnsibleVault(msg, tokenKeyStr, "token-key", path)
+	err = vault.EncryptWithAnsibleVault(msg, tokenKeyStr, "token_key", path)
 
 	if err != nil {
 		fmt.Println("There was an error encrypting the token key")
@@ -198,7 +198,7 @@ func checkExpiryLoop(msg string, path string) {
 
 		time.Sleep(36 * time.Hour)
 
-		tokenKeyPEM, err := utility.DecodeYamlTokenKey(path+"token-key.yaml")
+		tokenKeyPEM, err := utility.DecodeYamlTokenKey(path+"token_key.yaml")
 		if err != nil {
 			status = false
 			fmt.Println("There was something wrong decoding the token key")
@@ -236,7 +236,7 @@ func checkExpiryLoop(msg string, path string) {
 
 		if expired {
 
-			remstate1 := utility.RemoveFile(path, "token-key")
+			remstate1 := utility.RemoveFile(path, "token_key")
 			remstate2 := utility.RemoveFile(path, "token")
 
 			if !remstate1 && !remstate2 {
@@ -247,21 +247,21 @@ func checkExpiryLoop(msg string, path string) {
 			status = generateToken(msg, path)
 		}
 
-		certCAData, err := utility.DecodeYamlCertCa(path+"ca-cert.yaml")
+		certCAData, err := utility.DecodeYamlCertCa(path+"ca_cert.yaml")
 
 		if err != nil {
 			status = false
 			fmt.Println("There was something decoding the ca cert")
 		}
 
-		caKeyData, err := utility.DecodeYamlCaKey(path+"ca-key.yaml")
+		caKeyData, err := utility.DecodeYamlCaKey(path+"ca_key.yaml")
 
 		if err != nil {
 			status = false
 			fmt.Println("There was something wrong decoding the ca key")
 		}
 
-		clientCertData, err := utility.DecodeYamlClientCert(path+"client-cert.yaml")
+		clientCertData, err := utility.DecodeYamlClientCert(path+"client_cert.yaml")
 
 		if err != nil {
 			status = false
@@ -296,8 +296,8 @@ func checkExpiryLoop(msg string, path string) {
 
 		if expired {
 
-			remstate1 := utility.RemoveFile(path, "client-cert")
-			remstate2 := utility.RemoveFile(path, "client-key")
+			remstate1 := utility.RemoveFile(path, "client_cert")
+			remstate2 := utility.RemoveFile(path, "client_key")
 
 			if !remstate1 && !remstate2 {
 				status = false
@@ -316,10 +316,10 @@ func checkExpiryLoop(msg string, path string) {
 
 		if expired {
 
-			remstate1 := utility.RemoveFile(path, "ca-cert")
-			remstate2 := utility.RemoveFile(path, "ca-key")
-			remstate3 := utility.RemoveFile(path, "client-cert")
-			remstate4 := utility.RemoveFile(path, "client-key")
+			remstate1 := utility.RemoveFile(path, "ca_cert")
+			remstate2 := utility.RemoveFile(path, "ca_key")
+			remstate3 := utility.RemoveFile(path, "client_cert")
+			remstate4 := utility.RemoveFile(path, "client_key")
 
 			if !remstate1 && !remstate2 && !remstate3 && !remstate4 {
 				status = false
@@ -344,7 +344,7 @@ func main() {
 		return
 	}
 
-	if !utility.CheckIfFileExists(path, "ca-cert") && !utility.CheckIfFileExists(path, "ca-key") && !utility.CheckIfFileExists(path, "client-cert") {
+	if !utility.CheckIfFileExists(path, "ca_cert") && !utility.CheckIfFileExists(path, "ca_key") && !utility.CheckIfFileExists(path, "client_cert") {
 		status := generateCertificatesCaClient(msg, path)
 
 		fmt.Println("Generating CA and certificates for the first time")
@@ -355,7 +355,7 @@ func main() {
 		}
 	}
 
-	if !utility.CheckIfFileExists(path, "token-key") && !utility.CheckIfFileExists(path, "token") {
+	if !utility.CheckIfFileExists(path, "token_key") && !utility.CheckIfFileExists(path, "token") {
 
 		status := generateToken(msg, path)
 

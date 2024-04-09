@@ -33,7 +33,7 @@ mkdir config
 cd config
 ```
 
-Then we need to create 2 files configfile.txt and password.txt
+Then we need to create 2 files configfile.txt and password.txt (that holds the vault password)
 
 ```bash
 [nano or nvim] configfile.txt
