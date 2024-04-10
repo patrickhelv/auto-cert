@@ -7,8 +7,16 @@ import (
 	"os/exec"
 )
 
-func EncryptWithAnsibleVault(vaultPasswordFile string, data string, variableName string, path string) error {
-	cmd := exec.Command("ansible-vault", "encrypt_string", "--vault-password-file", vaultPasswordFile, data, "--name", variableName)
+func EncryptWithAnsibleVault(vaultPasswordFile string, data string, variableName string, path string, env bool) error {
+	
+	var command string
+	if env{
+		command = fmt.Sprintf("ansible-vault encrypt_string --name %s %s", variableName, data)
+	}else{
+		command = fmt.Sprintf("ansible-vault encrypt_string --vault-password-file %s %s --name %s", vaultPasswordFile, data, variableName)
+	}
+
+	cmd := exec.Command(command)
 
 	var out bytes.Buffer
 	cmd.Stdout = &out
@@ -31,7 +39,7 @@ func EncryptWithAnsibleVault(vaultPasswordFile string, data string, variableName
 }
 
 // decryptAnsibleVaultFile uses ansible-vault to decrypt a file and returns its content.
-func DecryptAnsibleVaultFile(encryptedString string, vaultPasswordFile string) (string, error) {
+func DecryptAnsibleVaultFile(encryptedString string, vaultPasswordFile string, env bool) (string, error) {
 
 	tmpfile, err := os.CreateTemp("", "ansible-vault-*.yml")
 	if err != nil {
@@ -47,7 +55,14 @@ func DecryptAnsibleVaultFile(encryptedString string, vaultPasswordFile string) (
 		return "", fmt.Errorf("closing temp file: %v", err)
 	}
 
-	cmd := exec.Command("ansible-vault", "view", tmpfile.Name(), "--vault-password-file", vaultPasswordFile)
+	var command string
+	if env{
+		command = fmt.Sprintf("ansible-vault view %s", tmpfile.Name())
+	}else{
+		command = fmt.Sprintf("ansible-vault view %s --vault-password-file %s", tmpfile.Name(), vaultPasswordFile)
+	}
+
+	cmd := exec.Command(command)
 
 	var out bytes.Buffer
 	cmd.Stdout = &out

@@ -20,6 +20,17 @@ spec:
         volumeMounts:
         - name: ansible-vault-volume
           mountPath: /mnt/
+        env:
+        - name: VAULT_PATH
+        valueFrom:
+          secretKeyRef:
+            name: secret
+            key: /mnt/
+        - name: ANSIBLE_VAULT_PASSWORD
+        valueFrom:
+          secretKeyRef:
+            name: secret
+            key: PASSWORD
       volumes:
       - name: ansible-vault-volume
         persistentVolumeClaim:

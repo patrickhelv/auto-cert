@@ -14,6 +14,8 @@ import (
 	"time"
 )
 
+var ENV bool
+
 func generateCertificateClient(caCert *x509.Certificate, cakey *ecdsa.PrivateKey) (bool, *ecdsa.PrivateKey, []byte) {
 
 	clientkey, err := client.GenerateECDSAeKey(elliptic.P256())
@@ -73,7 +75,7 @@ func generateCertificatesCaClient(msg string, path string) bool {
 
 	fmt.Println("Generating Certificates..")
 
-	err := vault.EncryptWithAnsibleVault(msg, caCertPem, "ca_cert", path)
+	err := vault.EncryptWithAnsibleVault(msg, caCertPem, "ca_cert", path, ENV)
 	if err != nil {
 		fmt.Println("There was an error generating the client certificate")
 		return false
@@ -81,7 +83,7 @@ func generateCertificatesCaClient(msg string, path string) bool {
 
 	fmt.Println("Generated CA cert")
 
-	err = vault.EncryptWithAnsibleVault(msg, caKeyPem, "ca_key", path)
+	err = vault.EncryptWithAnsibleVault(msg, caKeyPem, "ca_key", path, ENV)
 	if err != nil {
 		fmt.Println("There was an error generating the client certificate")
 		return false
@@ -89,7 +91,7 @@ func generateCertificatesCaClient(msg string, path string) bool {
 
 	fmt.Println("Generated CA key")
 
-	err = vault.EncryptWithAnsibleVault(msg, clientCertPem, "client_cert", path)
+	err = vault.EncryptWithAnsibleVault(msg, clientCertPem, "client_cert", path, ENV)
 
 	if err != nil {
 		fmt.Println("There was an error generating the client certificate")
@@ -98,7 +100,7 @@ func generateCertificatesCaClient(msg string, path string) bool {
 
 	fmt.Println("Generated client cert")
 
-	err = vault.EncryptWithAnsibleVault(msg, clientKey, "client_key", path)
+	err = vault.EncryptWithAnsibleVault(msg, clientKey, "client_key", path, ENV)
 
 	if err != nil {
 		fmt.Println("There was an error generating the client certificate")
@@ -135,14 +137,14 @@ func generateNewClients(caKey string, certCA string, msg string, path string) bo
 
 	clientKey := utility.EncodeToPEMPK(clientkey)
 
-	err = vault.EncryptWithAnsibleVault(msg, clientCertPem, "client_cert", path)
+	err = vault.EncryptWithAnsibleVault(msg, clientCertPem, "client_cert", path, ENV)
 
 	if err != nil {
 		fmt.Println("There was an error generating the client certificate")
 		return false
 	}
 
-	err = vault.EncryptWithAnsibleVault(msg, clientKey, "client_key", path)
+	err = vault.EncryptWithAnsibleVault(msg, clientKey, "client_key", path, ENV)
 
 	if err != nil {
 		fmt.Println("There was an error generating the client certificate")
@@ -172,14 +174,14 @@ func generateToken(msg string, path string) bool {
 
 	tokenKeyStr := utility.EncodeToPEMPubK(&tokenKey.PublicKey)
 
-	err = vault.EncryptWithAnsibleVault(msg, tokenKeyStr, "token_key", path)
+	err = vault.EncryptWithAnsibleVault(msg, tokenKeyStr, "token_key", path, ENV)
 
 	if err != nil {
 		fmt.Println("There was an error encrypting the token key")
 		return false
 	}
 
-	err = vault.EncryptWithAnsibleVault(msg, tokenStr, "token", path)
+	err = vault.EncryptWithAnsibleVault(msg, tokenStr, "token", path, ENV)
 
 	if err != nil {
 		fmt.Println("There was an error encrypting the token")
@@ -205,7 +207,7 @@ func checkExpiryLoop(msg string, path string) {
 			fmt.Println("There was something wrong decoding the token key")
 		}
 
-		tokenKeyData, err := vault.DecryptAnsibleVaultFile(tokenKeyPEM.TokenKey, msg)
+		tokenKeyData, err := vault.DecryptAnsibleVaultFile(tokenKeyPEM.TokenKey, msg, ENV)
 		if err != nil {
 			status = false
 			fmt.Println("There was something wrong decrypting the token key")
@@ -223,7 +225,7 @@ func checkExpiryLoop(msg string, path string) {
 			fmt.Println("There was something wrong decoding the token")
 		}
 
-		token, err := vault.DecryptAnsibleVaultFile(tokenData.Token, msg)
+		token, err := vault.DecryptAnsibleVaultFile(tokenData.Token, msg, ENV)
 		if err != nil {
 			status = false
 			fmt.Println("There was something wrong decrypting the token")
@@ -270,19 +272,19 @@ func checkExpiryLoop(msg string, path string) {
 		}
 
 
-		caCert, err := vault.DecryptAnsibleVaultFile(certCAData.Carcert, msg)
+		caCert, err := vault.DecryptAnsibleVaultFile(certCAData.Carcert, msg, ENV)
 		if err != nil {
 			status = false
 			fmt.Println("There was something wrong decrypting the ca certification")
 		}
 
-		caKey, err := vault.DecryptAnsibleVaultFile(caKeyData.Cakey, msg)
+		caKey, err := vault.DecryptAnsibleVaultFile(caKeyData.Cakey, msg, ENV)
 		if err != nil {
 			status = false
 			fmt.Println("There was something wrong decrypting the ca key")
 		}
 
-		clientCert, err := vault.DecryptAnsibleVaultFile(clientCertData.ClientCert, msg)
+		clientCert, err := vault.DecryptAnsibleVaultFile(clientCertData.ClientCert, msg, ENV)
 		if err != nil {
 			status = false
 			fmt.Println("There was something wrong decrypting the client cert")
@@ -338,7 +340,7 @@ func main() {
 	var path string
 	var msg string
 	var CONFIG_VAULT_PATH = "VAULT_PATH"
-	var CONFIG_VAULT_PASS = "VAULT_PASS"
+	var CONFIG_VAULT_PASS = "ANSIBLE_VAULT_PASSWORD"
 
 	path = os.Getenv(CONFIG_VAULT_PATH)
 	msg = os.Getenv(CONFIG_VAULT_PASS)
@@ -353,6 +355,11 @@ func main() {
 
 		path = config[0]
 		msg = config[1]
+		ENV = false
+
+	}else{
+
+		ENV = true
 	}
 
 
