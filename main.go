@@ -10,6 +10,7 @@ import (
 	"crypto/elliptic"
 	"crypto/x509"
 	"fmt"
+	"os"
 	"time"
 )
 
@@ -334,15 +335,26 @@ func checkExpiryLoop(msg string, path string) {
 
 func main() {
 
-	config, err := utility.FetchConfigFile("/root/config/configfile.txt")
+	var path string
+	var msg string
+	var CONFIG_VAULT_PATH = "VAULT_PATH"
+	var CONFIG_VAULT_PASS = "VAULT_PASS"
 
-	path := config[0]
-	msg := config[1]
+	path = os.Getenv(CONFIG_VAULT_PATH)
+	msg = os.Getenv(CONFIG_VAULT_PASS)
 
-	if err != nil {
-		fmt.Println("Error reading the config file")
-		return
+	if path == "" && msg == ""{
+		config, err := utility.FetchConfigFile("/root/config/configfile.txt")
+
+		if err != nil {
+			fmt.Println("Error reading the config file")
+			return
+		}
+
+		path = config[0]
+		msg = config[1]
 	}
+
 
 	if !utility.CheckIfFileExists(path, "ca_cert") && !utility.CheckIfFileExists(path, "ca_key") && !utility.CheckIfFileExists(path, "client_cert") {
 		status := generateCertificatesCaClient(msg, path)
