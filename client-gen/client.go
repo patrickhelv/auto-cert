@@ -20,7 +20,7 @@ func GenerateECDSAeKey(curve elliptic.Curve) (*ecdsa.PrivateKey, error) {
 	return key, nil
 }
 
-func GenerateClientCertificate(caCert *x509.Certificate, caKey *ecdsa.PrivateKey, clientKey *ecdsa.PrivateKey) ([]byte, error) {
+func GenerateClientCertificate(caCert *x509.Certificate, caKey *ecdsa.PrivateKey, clientKey *ecdsa.PrivateKey, validity time.Time, name string) ([]byte, error) {
 	serialNumber, err := rand.Int(rand.Reader, new(big.Int).Lsh(big.NewInt(1), 256))
 	if err != nil {
 		return nil, err
@@ -29,10 +29,11 @@ func GenerateClientCertificate(caCert *x509.Certificate, caKey *ecdsa.PrivateKey
 	clientCert := &x509.Certificate{
 		SerialNumber: serialNumber,
 		Subject: pkix.Name{
-			Organization: []string{"Ros shim"},
+			Organization: []string{name},
 		},
 		NotBefore:   time.Now(),
-		NotAfter:    time.Now().AddDate(1, 0, 0), // 1 year validity
+		NotAfter:    validity, // 1 year validity time.Now().AddDate(1, 0, 0) time.Now().Add(365 * 24 * time.Hour)
+
 		KeyUsage:    x509.KeyUsageDigitalSignature | x509.KeyUsageKeyEncipherment,
 		ExtKeyUsage: []x509.ExtKeyUsage{x509.ExtKeyUsageClientAuth},
 		IsCA:        false,

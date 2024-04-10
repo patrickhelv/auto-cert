@@ -20,6 +20,10 @@ type ClientCertification struct {
 	ClientCert string `yaml:"client_cert"`
 }
 
+type ServerCertification struct {
+	ServerCert string `yaml:"server_cert"`
+}
+
 type CaPKey struct {
 	Cakey string `yaml:"ca_key"`
 }
@@ -192,6 +196,25 @@ func DecodeYamlCertCa(filePath string) (CaCertification, error) {
 func DecodeYamlClientCert(filePath string) (ClientCertification, error) {
 
 	var cert ClientCertification
+
+	data, err := os.ReadFile(filePath)
+	if err != nil {
+		fmt.Printf("error reading file: %v", err)
+		return cert, err
+	}
+
+	err = yaml.Unmarshal([]byte(data), &cert)
+	if err != nil {
+		fmt.Println(err)
+		return cert, err
+	}
+
+	return cert, nil
+}
+
+func DecodeYamlServerCert(filePath string) (ServerCertification, error) {
+
+	var cert ServerCertification
 
 	data, err := os.ReadFile(filePath)
 	if err != nil {
