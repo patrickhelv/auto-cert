@@ -53,14 +53,12 @@ func DecryptAnsibleVaultFile(encryptedString string, vaultPasswordFile string, e
 		return "", fmt.Errorf("closing temp file: %v", err)
 	}
 
-	var command string
+	var cmd *exec.Cmd
 	if env{
-		command = fmt.Sprintf("ansible-vault view %s", tmpfile.Name())
+		cmd = exec.Command("ansible-vault", "view", tmpfile.Name())
 	}else{
-		command = fmt.Sprintf("ansible-vault view %s --vault-password-file %s", tmpfile.Name(), vaultPasswordFile)
+		cmd = exec.Command("ansible-vault", "view", tmpfile.Name(), "--vault-password-file", vaultPasswordFile)
 	}
-
-	cmd := exec.Command(command)
 
 	var out bytes.Buffer
 	cmd.Stdout = &out
