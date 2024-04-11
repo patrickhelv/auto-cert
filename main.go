@@ -292,13 +292,13 @@ func checkExpiryLoop(msg string, path string) {
 
 		time.Sleep(36 * time.Hour)
 
-		tokenKeyPEM, err := utility.DecodeYamlTokenKey(path+"token_key.yaml")
+		tokenKeyYML, err := utility.DecodeYamlTokenKey(path+"token_key.yaml")
 		if err != nil {
 			status = false
 			fmt.Println("There was something wrong decoding the token key")
 		}
 
-		tokenKeyData, err := vault.DecryptAnsibleVaultFile(tokenKeyPEM.TokenKey, msg, ENV)
+		tokenKeyData, err := vault.DecryptAnsibleVaultFile(tokenKeyYML.TokenKey, msg, ENV)
 		if err != nil {
 			status = false
 			fmt.Println("There was something wrong decrypting the token key")
@@ -488,8 +488,8 @@ func main() {
 	}
 
 
-	if !utility.CheckIfFileExists(path, "ca_cert") && !utility.CheckIfFileExists(path, "ca_key") && 
-		!utility.CheckIfFileExists(path, "client_cert") && !utility.CheckIfFileExists(path, "server_cert"){
+	if !utility.CheckIfFileExists(path, "ca_cert") || !utility.CheckIfFileExists(path, "ca_key") || 
+		!utility.CheckIfFileExists(path, "client_cert") || !utility.CheckIfFileExists(path, "server_cert"){
 
 		if utility.CheckIfFileExists(path, "ca_cert"){
 			utility.RemoveFile(path, "ca_cert")
@@ -529,6 +529,14 @@ func main() {
 	if !utility.CheckIfFileExists(path, "token_key") && !utility.CheckIfFileExists(path, "token") {
 
 		status := generateToken(msg, path)
+
+		if utility.CheckIfFileExists(path, "token"){
+			utility.RemoveFile(path, "token")
+		}
+
+		if utility.CheckIfFileExists(path, "token_key"){
+			utility.RemoveFile(path, "token_key")
+		}
 
 		fmt.Println("Generating token key and token for the first time")
 

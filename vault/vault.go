@@ -9,14 +9,12 @@ import (
 
 func EncryptWithAnsibleVault(vaultPasswordFile string, data string, variableName string, path string, env bool) error {
 	
-	var command string
+	var cmd *exec.Cmd
 	if env{
-		command = fmt.Sprintf("ansible-vault encrypt_string --name %s %s", variableName, data)
+		cmd = exec.Command("ansible-vault", "encrypt_string", "--name", variableName, data)
 	}else{
-		command = fmt.Sprintf("ansible-vault encrypt_string --vault-password-file %s %s --name %s", vaultPasswordFile, data, variableName)
+		cmd = exec.Command("ansible-vault", "encrypt_string", "--vault-password-file", vaultPasswordFile, data, "--name", variableName)
 	}
-
-	cmd := exec.Command(command)
 
 	var out bytes.Buffer
 	cmd.Stdout = &out
