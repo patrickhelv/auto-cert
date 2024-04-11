@@ -515,10 +515,9 @@ func main() {
 			utility.RemoveFile(path, "server_key")
 		}
 
-
-		status := generateCertificatesCaClient(msg, path)
-
 		fmt.Println("Generating CA and certificates for the first time")
+		
+		status := generateCertificatesCaClient(msg, path)
 
 		if !status {
 			fmt.Println("Error creating certificates for the first time please verify check if something is wrong")
@@ -526,9 +525,7 @@ func main() {
 		}
 	}
 
-	if !utility.CheckIfFileExists(path, "token_key") && !utility.CheckIfFileExists(path, "token") {
-
-		status := generateToken(msg, path)
+	if utility.CheckIfFileExists(path, "token_key") || utility.CheckIfFileExists(path, "token") {
 
 		if utility.CheckIfFileExists(path, "token"){
 			utility.RemoveFile(path, "token")
@@ -539,6 +536,8 @@ func main() {
 		}
 
 		fmt.Println("Generating token key and token for the first time")
+
+		status := generateToken(msg, path)
 
 		if !status {
 			fmt.Println("Error creating certificates for the first time please verify check if something is wrong")
