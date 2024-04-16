@@ -33,7 +33,7 @@ mkdir config
 cd config
 ```
 
-Then we need to create 2 files configfile.txt and password.txt (that holds the vault password)
+Then we need to create 3 files configfile.txt and password.txt (that holds the vault password) and configcerts.ini
 
 ```bash
 [nano or nvim] configfile.txt
@@ -52,6 +52,31 @@ write your password in this file of course without brackets
 
 ```txt
 [YOUR ansible-vault PASSWORD] 
+```
+
+This is an example configcerts.ini file
+
+```ini
+[clientcert]
+NAME: {INSERT NAME OF FILE HERE}
+KEYNAME:{INSERT NAME OF KEY FILE HERE}
+...
+NAME: {INSERT NAME OF FILE HERE}
+KEYNAME: {INSERT NAME OF KEY FILE HERE}
+
+[servercert]
+NAME: {INSERT NAME OF FILE HERE}
+KEYNAME: {INSERT NAME OF KEY FILE HERE}
+...
+NAME: {INSERT NAME OF FILE HERE}
+KEYNAME: {INSERT NAME OF KEY FILE HERE}
+
+[token]
+NAME: {INSERT NAME OF FILE HERE}
+KEYNAME: {INSERT NAME OF KEY FILE HERE}
+...
+NAME: {INSERT NAME OF FILE HERE}
+KEYNAME: {INSERT NAME OF KEY FILE HERE}
 ```
 
 ### Docker
