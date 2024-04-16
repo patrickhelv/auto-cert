@@ -7,13 +7,13 @@ import (
 	"os/exec"
 )
 
-func EncryptWithAnsibleVault(vaultPasswordFile string, data string, variableName string, path string, env bool) error {
+func EncryptWithAnsibleVault(vaultPasswordFile string, data string, typeName string, path string, env bool, variableName string) error {
 	
 	var cmd *exec.Cmd
 	if env{
-		cmd = exec.Command("ansible-vault", "encrypt_string", "--name", variableName, data)
+		cmd = exec.Command("ansible-vault", "encrypt_string", "--name", typeName, data)
 	}else{
-		cmd = exec.Command("ansible-vault", "encrypt_string", "--vault-password-file", vaultPasswordFile, data, "--name", variableName)
+		cmd = exec.Command("ansible-vault", "encrypt_string", "--vault-password-file", vaultPasswordFile, data, "--name", typeName)
 	}
 
 	var out bytes.Buffer

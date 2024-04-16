@@ -10,6 +10,8 @@ import (
 	"fmt"
 	"math/big"
 	"time"
+	"auto-cert/utility"
+	"auto-cert/vault"
 )
 
 func GenerateECDSAPrivateKey(curve elliptic.Curve) (*ecdsa.PrivateKey, error) {
@@ -32,7 +34,7 @@ func GenerateCACertificate(key *ecdsa.PrivateKey) (*x509.Certificate, []byte, er
 			Organization: []string{"ROS Shim CA"},
 		},
 		NotBefore:             time.Now(),
-		NotAfter:              time.Now().AddDate(10, 0, 0), // 10 years
+		NotAfter:              time.Now().AddDate(10, 0, 0), // 10 years 
 		KeyUsage:              x509.KeyUsageCertSign | x509.KeyUsageDigitalSignature,
 		ExtKeyUsage:           []x509.ExtKeyUsage{x509.ExtKeyUsageServerAuth, x509.ExtKeyUsageClientAuth},
 		BasicConstraintsValid: true,
@@ -113,4 +115,31 @@ func PemToECDSAPub(pemData string) (*ecdsa.PublicKey, error) {
 	}
 
 	return ecdsaPub, nil
+}
+
+func DecryptAndDecodeCa(path string, msg string, ENV bool) (string, string, error){
+	certCAData, err := utility.DecodeYamlCertCa(path+"ca_cert.yaml")
+
+	if err != nil {
+		return "", "", fmt.Errorf("there was something decoding the ca cert %v", err)
+	}
+
+	caKeyData, err := utility.DecodeYamlCaKey(path+"ca_key.yaml")
+
+	if err != nil {
+		return "", "", fmt.Errorf("there was something wrong decoding the ca key, %v", err)
+	}
+
+	caCert, err := vault.DecryptAnsibleVaultFile(certCAData, msg, ENV)
+	
+	if err != nil {
+		return "", "", fmt.Errorf("there was something wrong decrypting the ca certification %v", err)
+	}
+
+	caKey, err := vault.DecryptAnsibleVaultFile(caKeyData, msg, ENV)
+	if err != nil {
+		return "", "", fmt.Errorf("there was something wrong decrypting the ca key %v", err)
+	}
+
+	return caCert, caKey, nil
 }

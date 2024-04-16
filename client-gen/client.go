@@ -10,6 +10,10 @@ import (
 	"time"
 	"encoding/pem"
 	"os"
+	"fmt"
+
+	"auto-cert/utility"
+	"auto-cert/vault"
 )
 
 func GenerateECDSAeKey(curve elliptic.Curve) (*ecdsa.PrivateKey, error) {
@@ -58,3 +62,38 @@ func WritePrivateKeyToFile(key *ecdsa.PrivateKey, filename string) error {
 	})
 	return os.WriteFile(filename, keyPEM, 0600) // Ensure file is only readable by the user
 }
+
+func DecodeAndDecryptCertClient(path string, msg string, name string, ENV bool) (string, error){
+
+	clientCertData, err := utility.DecodeYamlClientCert(path+name+".yaml")
+
+	if err != nil {
+		return "", fmt.Errorf("there was something wrong decoding the client cert, %v", err)
+	}
+
+	clientCert, err := vault.DecryptAnsibleVaultFile(clientCertData, msg, ENV)
+	if err != nil {
+		return "", fmt.Errorf("there was something wrong decrypting the client cert, %v", err)
+	}
+
+	return clientCert, nil
+}
+
+func DecodeAndDecryptCertServer(path string, msg string, name string, ENV bool) (string, error){
+
+	serverCertData, err := utility.DecodeYamlServerCert(path+name+".yaml")
+
+	if err != nil {
+		return "", fmt.Errorf("there was something wrong decoding the server cert, %v", err)
+	}
+
+	serverCert, err := vault.DecryptAnsibleVaultFile(serverCertData, msg, ENV)
+	if err != nil {
+		return "", fmt.Errorf("there was something wrong decrypting the server cert %v", err)
+	}
+
+	return serverCert, nil
+}
+
+
+

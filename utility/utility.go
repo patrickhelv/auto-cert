@@ -10,6 +10,7 @@ import (
 	"gopkg.in/yaml.v2"
 	"os"
 	"strings"
+	"auto-cert/certificate"
 )
 
 type CaCertification struct {
@@ -38,6 +39,13 @@ type TokenPKey struct {
 
 type Token struct {
 	Token string `yaml:"token"`
+}
+
+// Config structure now holds slices of specific certificate types.
+type Config struct {
+    ClientCerts []cert.ClientCertificate
+    ServerCerts []cert.ServerCertificate
+    Tokens      []cert.Token
 }
 
 // Reads a specified config files
@@ -75,6 +83,67 @@ func readConfigFile(filePath string) (map[string]string, error) {
 	}
 
 	return config, nil
+}
+
+func ReadCertConfig(filename string) (*Config, error){
+    file, err := os.Open(filename)
+    if err != nil {
+        return nil, err
+    }
+    defer file.Close()
+
+    scanner := bufio.NewScanner(file)
+    cfg := &Config{}
+    var currentKey string
+
+    for scanner.Scan() {
+        line := strings.TrimSpace(scanner.Text())
+        if strings.HasPrefix(line, "[") && strings.HasSuffix(line, "]") {
+            currentKey = line
+        } else {
+            parts := strings.SplitN(line, ":", 2)
+            if len(parts) == 2 {
+                key := strings.TrimSpace(parts[0])
+                value := strings.TrimSpace(parts[1])
+                if currentKey == "[clientcert]" {
+                    if key == "NAME" {
+                        cfg.ClientCerts = append(cfg.ClientCerts, cert.ClientCertificate{
+                            Type:        "Client",
+                            CertFileName: value,
+                            KeyFileName:  "", // Placeholder, to be filled in next valid KEYNAME
+                        })
+                    } else if key == "KEYNAME" && len(cfg.ClientCerts) > 0 {
+                        cfg.ClientCerts[len(cfg.ClientCerts)-1].KeyFileName = value
+                    }
+                } else if currentKey == "[servercert]" {
+                    if key == "NAME" {
+                        cfg.ServerCerts = append(cfg.ServerCerts, cert.ServerCertificate{
+                            Type:        "Server",
+                            CertFileName: value,
+                            KeyFileName:  "", // Placeholder, to be filled in next valid KEYNAME
+                        })
+                    } else if key == "KEYNAME" && len(cfg.ServerCerts) > 0 {
+                        cfg.ServerCerts[len(cfg.ServerCerts)-1].KeyFileName = value
+                    }
+                } else if currentKey == "[token]" {
+                    if key == "NAME" {
+                        cfg.Tokens = append(cfg.Tokens, cert.Token{
+                            Type:         "Token",
+                            TokenFileName: value,
+                            KeyFileName:  "", // Placeholder, to be filled in next valid KEYNAME
+                        })
+                    } else if key == "KEYNAME" && len(cfg.Tokens) > 0 {
+                        cfg.Tokens[len(cfg.Tokens)-1].KeyFileName = value
+                    }
+                }
+            }
+        }
+    }
+
+    if err := scanner.Err(); err != nil {
+        return nil, err
+    }
+    return cfg, nil
 }
 
 func FetchConfigFile(configFile string) ([]string, error) {
@@ -174,137 +243,137 @@ func EncodeToPEMCert(Bytes []byte) string {
 	return pemBuf.String()
 }
 
-func DecodeYamlCertCa(filePath string) (CaCertification, error) {
+func DecodeYamlCertCa(filePath string) (string, error) {
 
 	var cert CaCertification
 
 	data, err := os.ReadFile(filePath)
 	if err != nil {
 		fmt.Printf("error reading file: %v", err)
-		return cert, err
+		return "", err
 	}
 
 	err = yaml.Unmarshal([]byte(data), &cert)
 	if err != nil {
 		fmt.Println(err)
-		return cert, err
+		return "", err
 	}
 
-	return cert, nil
+	return cert.Carcert, nil
 }
 
-func DecodeYamlClientCert(filePath string) (ClientCertification, error) {
+func DecodeYamlClientCert(filePath string) (string, error) {
 
 	var cert ClientCertification
 
 	data, err := os.ReadFile(filePath)
 	if err != nil {
 		fmt.Printf("error reading file: %v", err)
-		return cert, err
+		return "", err
 	}
 
 	err = yaml.Unmarshal([]byte(data), &cert)
 	if err != nil {
 		fmt.Println(err)
-		return cert, err
+		return "", err
 	}
 
-	return cert, nil
+	return cert.ClientCert, nil
 }
 
-func DecodeYamlServerCert(filePath string) (ServerCertification, error) {
+func DecodeYamlServerCert(filePath string) (string, error) {
 
 	var cert ServerCertification
 
 	data, err := os.ReadFile(filePath)
 	if err != nil {
 		fmt.Printf("error reading file: %v", err)
-		return cert, err
+		return "", err
 	}
 
 	err = yaml.Unmarshal([]byte(data), &cert)
 	if err != nil {
 		fmt.Println(err)
-		return cert, err
+		return "", err
 	}
 
-	return cert, nil
+	return cert.ServerCert, nil
 }
 
-func DecodeYamlCaKey(filePath string) (CaPKey, error) {
+func DecodeYamlCaKey(filePath string) (string, error) {
 
 	var key CaPKey
 
 	data, err := os.ReadFile(filePath)
 	if err != nil {
 		fmt.Printf("error reading file: %v", err)
-		return key, err
+		return "", err
 	}
 
 	err = yaml.Unmarshal([]byte(data), &key)
 	if err != nil {
 		fmt.Println(err)
-		return key, err
+		return "", err
 	}
 
-	return key, nil
+	return key.Cakey, nil
 }
 
-func DecodeYamlClientKey(filePath string) (ClientPKey, error) {
+func DecodeYamlClientKey(filePath string) (string, error) {
 
 	var key ClientPKey
 
 	data, err := os.ReadFile(filePath)
 	if err != nil {
 		fmt.Printf("error reading file: %v", err)
-		return key, err
+		return "", err
 	}
 
 	err = yaml.Unmarshal([]byte(data), &key)
 	if err != nil {
 		fmt.Println(err)
-		return key, err
+		return "", err
 	}
 
-	return key, nil
+	return key.ClientKey, nil
 }
 
-func DecodeYamlTokenKey(filePath string) (TokenPKey, error) {
+func DecodeYamlTokenKey(filePath string) (string, error) {
 
 	var key TokenPKey
 
 	data, err := os.ReadFile(filePath)
 	if err != nil {
 		fmt.Printf("error reading file: %v", err)
-		return key, err
+		return "", err
 	}
 
 	err = yaml.Unmarshal([]byte(data), &key)
 	if err != nil {
 		fmt.Println(err)
-		return key, err
+		return "", err
 	}
 
-	return key, nil
+	return key.TokenKey, nil
 }
 
-func DecodeToken(filePath string) (Token, error) {
+func DecodeToken(filePath string) (string, error) {
 
 	var token Token
 
 	data, err := os.ReadFile(filePath)
 	if err != nil {
 		fmt.Printf("error reading file: %v", err)
-		return token, err
+		return "", err
 	}
 
 	err = yaml.Unmarshal([]byte(data), &token)
 	if err != nil {
 		fmt.Println(err)
-		return token, err
+		return "", err
 	}
 
-	return token, nil
+	return token.Token, nil
 }
 
 
@@ -324,7 +393,7 @@ func RemoveFile(path string, name string) bool {
 	err := os.Remove(path + name + ".yaml")
 
 	if err != nil {
-		fmt.Printf("Did not delete file %s/%s", path, name)
+		fmt.Printf("Did not delete file %s%s\n", path, name)
 		return false
 	}
 
