@@ -20,18 +20,20 @@ spec:
         volumeMounts:
         - name: ansible-vault-volume
           mountPath: /mnt/
+        - name: config-volume
+          mountPath: /root/config/configcerts.ini
+          subPath: config.ini
+          readOnly: true
         env:
-        - name: VAULT_PATH
-        valueFrom:
-          secretKeyRef:
-            name: secret
-            key: /mnt/
         - name: ANSIBLE_VAULT_PASSWORD
         valueFrom:
           secretKeyRef:
-            name: secret
-            key: PASSWORD
+            name: secrets
+            key: ANSIBLE_VAULT_PASSWORD
       volumes:
       - name: ansible-vault-volume
         persistentVolumeClaim:
           claimName: host-pvc
+      - name: config-volume
+        secret:
+          secretName: secrets
