@@ -207,38 +207,6 @@ func checkExpiryLoop(msg string, path string, cfg *utility.Config) {
 	}
 }
 
-func generateCertificates(path string, msg string, cfg *utility.Config, caKey string, caCert string) (bool){
-	
-	for _, entry := range cfg.ClientCerts{
-		status := certgen.GenerateNewClient(caKey, caCert, msg, path, ENV, entry.CertFileName, entry.KeyFileName)
-		
-		if !status{
-			fmt.Println("there was an error generating the client cert")
-			return false
-		}
-	}
-
-	for _, entry := range cfg.ServerCerts{
-		status := certgen.GenerateNewServer(caKey, caCert, msg, path, ENV, entry.CertFileName, entry.KeyFileName)
-		
-		if !status{
-			fmt.Println("there was an error generating the server cert")
-			return false
-		}
-	}
-
-	for _, entry := range cfg.Tokens{
-		status := tokengen.GenerateToken(msg, path, ENV, entry.TokenFileName, entry.KeyFileName)
-		
-		if !status{
-			fmt.Println("There was an error generating the token")
-			return false
-		}
-	}
-
-	return true
-}
-
 func generateCertificatesFirstTime(path string, msg string, cfg *utility.Config, caCert *x509.Certificate, caKey *ecdsa.PrivateKey, caCertificateBytes []byte) (bool){
 	for _,entry := range cfg.ClientCerts{
 
@@ -356,15 +324,8 @@ func main() {
 
 	if caCert == nil && caKey == nil{
 		
-		fmt.Println("Fetching existing CA")
-		caCert, caKey, err := ca.DecryptAndDecodeCa(path, msg, ENV)
-
-		if err != nil{
-			return
-		}
-
 		fmt.Println("Generating client and server certificates specified in the configcerts.ini")
-		status := generateCertificates(path, msg, cfg, caKey, caCert)
+		status := checkAndUpdateAll(msg, path, cfg)
 		if !status{
 			return
 		}
