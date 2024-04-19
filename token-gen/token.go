@@ -42,7 +42,7 @@ func CheckTokenExpiry(tokenStr string, PubtokenKey *ecdsa.PublicKey) (bool, erro
 
 	if err != nil {
 		fmt.Printf("There was an error parsing the token string, %v\n", err)
-		return true, err
+		return false, err
 	}
 
 	if claims, ok := token.Claims.(jwt.MapClaims); ok && token.Valid {

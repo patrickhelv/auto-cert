@@ -19,7 +19,7 @@ import (
 func GenerateECDSAeKey(curve elliptic.Curve) (*ecdsa.PrivateKey, error) {
 	key, err := ecdsa.GenerateKey(curve, rand.Reader)
 	if err != nil {
-		return nil, err
+		return nil, err	
 	}
 	return key, nil
 }
