@@ -41,6 +41,13 @@ func CheckTokenExpiry(tokenStr string, PubtokenKey *ecdsa.PublicKey) (bool, erro
 	})
 
 	if err != nil {
+		if ve, ok := err.(*jwt.ValidationError); ok {
+			if ve.Errors&jwt.ValidationErrorExpired != 0 {
+				// The token is expired
+				fmt.Println("The token has expired, renewing token...")
+				return true, nil
+			}
+		}
 		fmt.Printf("There was an error parsing the token string, %v\n", err)
 		return false, err
 	}
