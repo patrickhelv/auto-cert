@@ -110,6 +110,36 @@ kubectl apply -f volume-claim.yaml
 kubectl apply -f deploymentMultiNode.yaml
 ```
 
+### How to deploy secrets.yaml
+
+```bash
+base64 -w 0 config/configcerts.ini
+base64 -w 0 config/password.txt
+```
+
+Move over to charts
+
+```bash
+cd charts
+```
+
+Replace the fields in ``secrets-kctl.yaml``, ``config.ini: <base64-encoded-configcerts.ini>`` and ``ANSIBLE_VAULT_PASSWORD: <base64-encoded-password.txt>``.
+
+```bash
+apiVersion: v1
+kind: Secret
+metadata:
+  name: secrets
+type: Opaque
+data:
+  config.ini: <base64-encoded-configcerts.ini>
+  ANSIBLE_VAULT_PASSWORD: <base64-encoded-password.txt>
+```
+
+```
+kubectl apply -f secrets-kctl.yaml
+```
+
 ### How to run locally
 
 ```bash
