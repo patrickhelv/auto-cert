@@ -96,6 +96,13 @@ docker-compose up
 
 see guide on how to make your own local registry [here](/Create%20local%20container%20registry.md).
 
+How to push to local registry
+```
+docker build -t <image_name> .
+docker tag my-image localhost:5001/my-image:tag
+docker push localhost:5001/my-image:tag
+```
+
 ```bash
 cd /charts
 kubectl apply -f deployment.yaml
