@@ -40,7 +40,6 @@ func GenerateClientCertificate(caCert *x509.Certificate, caKey *ecdsa.PrivateKey
 		NotAfter:    validity, // 1 year validity time.Now().AddDate(1, 0, 0) time.Now().Add(365 * 24 * time.Hour)
 
 		KeyUsage:    x509.KeyUsageDigitalSignature | x509.KeyUsageKeyEncipherment,
-		ExtKeyUsage: []x509.ExtKeyUsage{x509.ExtKeyUsageClientAuth},
 		IsCA:        false,
 	}
 
