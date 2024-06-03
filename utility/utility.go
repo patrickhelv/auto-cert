@@ -149,6 +149,7 @@ func ReadCertConfig(filename string) (*Config, error){
 func FetchConfigFile(configFile string) ([]string, error) {
 	var CONFIG_VAULT_PATH = "VAULT_PATH"
 	var CONFIG_VAULT_PASS = "VAULT_PASS"
+	var CONFIG_IP = "IP_ADR"
 
 	var result []string
 
@@ -166,6 +167,12 @@ func FetchConfigFile(configFile string) ([]string, error) {
 	}
 
 	if val, exists := configFileMap[CONFIG_VAULT_PASS]; exists {
+		result = append(result, val)
+	} else {
+		return nil, err
+	}
+
+	if val, exists := configFileMap[CONFIG_IP]; exists {
 		result = append(result, val)
 	} else {
 		return nil, err

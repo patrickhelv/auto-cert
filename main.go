@@ -126,7 +126,7 @@ func checkAndUpdateCertificates(msg, path string, cfg *utility.Config) error{
 	return nil
 }
 
-func checkAndUpdateCA(msg, path string, cfg *utility.Config) (error){
+func checkAndUpdateCA(msg, path string, cfg *utility.Config, ip string) (error){
 	caCert, _, err := ca.DecryptAndDecodeCa(path, msg, ENV)
 
 	fmt.Println("Checking CA...")
@@ -142,7 +142,7 @@ func checkAndUpdateCA(msg, path string, cfg *utility.Config) (error){
 
 	if status{
 
-		status, caCertNew, caKeyNew, caCertificateBytes := certgen.GenerateCa()
+		status, caCertNew, caKeyNew, caCertificateBytes := certgen.GenerateCa(ip)
 
 		if !status{
 			return fmt.Errorf("there was an error generacting a new CA after the expiry date")
@@ -173,9 +173,9 @@ func checkAndUpdateCA(msg, path string, cfg *utility.Config) (error){
 
 
 
-func checkAndUpdateAll(msg string, path string, cfg *utility.Config) bool {
+func checkAndUpdateAll(msg string, path string, cfg *utility.Config, ip string) bool {
 
-	if err := checkAndUpdateCA(msg, path, cfg); err != nil{
+	if err := checkAndUpdateCA(msg, path, cfg, ip); err != nil{
 		fmt.Printf("there was an error checking CA %v\n", err)
 		return false
 	}
@@ -194,7 +194,7 @@ func checkAndUpdateAll(msg string, path string, cfg *utility.Config) bool {
 }
 
 
-func checkExpiryLoop(msg string, path string, cfg *utility.Config) {
+func checkExpiryLoop(msg string, path string, cfg *utility.Config, ip string) {
 
 	status := true
 
@@ -203,7 +203,7 @@ func checkExpiryLoop(msg string, path string, cfg *utility.Config) {
 
 		time.Sleep(36 * time.Hour)
 
-		status = checkAndUpdateAll(msg, path, cfg)
+		status = checkAndUpdateAll(msg, path, cfg, ip)
 	}
 }
 
@@ -258,6 +258,7 @@ func main() {
 
 	var path string
 	var msg string
+	var ip string
 
 	var caCert *x509.Certificate
 	var caKey *ecdsa.PrivateKey
@@ -282,6 +283,7 @@ func main() {
 
 		path = config[0]
 		msg = config[1]
+		ip = config[2]
 		ENV = false
 
 	}else{
@@ -306,7 +308,7 @@ func main() {
 		}
 
 		fmt.Println("Generating CA for the first time")
-		status, caCert, caKey, caCertificateBytes = certgen.GenerateCa()
+		status, caCert, caKey, caCertificateBytes = certgen.GenerateCa(ip)
 
 		if !status {
 			fmt.Println("There was an error generating the first CA")
@@ -325,7 +327,7 @@ func main() {
 	if caCert == nil && caKey == nil{
 		
 		fmt.Println("Generating client and server certificates specified in the configcerts.ini")
-		status := checkAndUpdateAll(msg, path, cfg)
+		status := checkAndUpdateAll(msg, path, cfg, ip)
 		if !status{
 			return
 		}
@@ -339,6 +341,6 @@ func main() {
 		}
 	}
 
-	checkExpiryLoop(msg, path, cfg)
+	checkExpiryLoop(msg, path, cfg, ip)
 
 }

@@ -5,6 +5,7 @@ import (
 	"auto-cert/client-gen"
 	"auto-cert/utility"
 	"auto-cert/vault"
+	"net"
 
 	"crypto/ecdsa"
 	"crypto/elliptic"
@@ -13,7 +14,7 @@ import (
 	"time"
 )
 
-func GenerateCa() (bool, *x509.Certificate, *ecdsa.PrivateKey, []byte) {
+func GenerateCa(ip string) (bool, *x509.Certificate, *ecdsa.PrivateKey, []byte) {
 
 	cakey, err := ca.GenerateECDSAPrivateKey(elliptic.P256())
 
@@ -22,7 +23,9 @@ func GenerateCa() (bool, *x509.Certificate, *ecdsa.PrivateKey, []byte) {
 		return false, nil, nil, nil
 	}
 
-	caCert, caCertificateBytes, err := ca.GenerateCACertificate(cakey)
+	ipAddresses := []net.IP{net.ParseIP(ip)}
+
+	caCert, caCertificateBytes, err := ca.GenerateCACertificate(cakey, ipAddresses)
 
 	if err != nil {
 		fmt.Println("There was an error generating the ca certificate")

@@ -1,17 +1,19 @@
 package ca
 
 import (
+	"auto-cert/utility"
+	"auto-cert/vault"
 	"crypto/ecdsa"
 	"crypto/elliptic"
 	"crypto/rand"
 	"crypto/x509"
 	"crypto/x509/pkix"
+	"encoding/asn1"
 	"encoding/pem"
 	"fmt"
 	"math/big"
+	"net"
 	"time"
-	"auto-cert/utility"
-	"auto-cert/vault"
 )
 
 func GenerateECDSAPrivateKey(curve elliptic.Curve) (*ecdsa.PrivateKey, error) {
@@ -22,11 +24,20 @@ func GenerateECDSAPrivateKey(curve elliptic.Curve) (*ecdsa.PrivateKey, error) {
 	return key, nil
 }
 
-func GenerateCACertificate(key *ecdsa.PrivateKey) (*x509.Certificate, []byte, error) {
+func GenerateCACertificate(key *ecdsa.PrivateKey, ipAddresses []net.IP) (*x509.Certificate, []byte, error) {
 	serialNumber, err := rand.Int(rand.Reader, new(big.Int).Lsh(big.NewInt(1), 256))
 	if err != nil {
 		return nil, nil, err
 	}
+
+	// Create SubjectAltName extension
+    var sanExtension pkix.Extension
+    if len(ipAddresses) > 0 {
+        sanExtension, err = createSanExtension(ipAddresses)
+        if err != nil {
+            return nil, nil, err
+        }
+    }
 
 	ca := &x509.Certificate{
 		SerialNumber: serialNumber,
@@ -41,12 +52,41 @@ func GenerateCACertificate(key *ecdsa.PrivateKey) (*x509.Certificate, []byte, er
 		IsCA:                  true,
 	}
 
+	if len(ipAddresses) > 0 {
+        ca.ExtraExtensions = []pkix.Extension{sanExtension}
+    }
+
 	caBytes, err := x509.CreateCertificate(rand.Reader, ca, ca, &key.PublicKey, key)
 	if err != nil {
 		return nil, nil, err
 	}
 
 	return ca, caBytes, nil
+}
+
+func createSanExtension(ipAddresses []net.IP) (pkix.Extension, error) {
+    var san pkix.Extension
+    var err error
+
+    rawValues := []asn1.RawValue{}
+
+    for _, ip := range ipAddresses {
+        rawValues = append(rawValues, asn1.RawValue{
+            Class:      asn1.ClassContextSpecific,
+            Tag:        7, // IP Address
+            IsCompound: false,
+            Bytes:      ip,
+        })
+    }
+
+    san.Value, err = asn1.Marshal(rawValues)
+    if err != nil {
+        return san, err
+    }
+
+    san.Id = asn1.ObjectIdentifier{2, 5, 29, 17} // OID for Subject Alternative Name
+
+    return san, nil
 }
 
 func CheckCertExpiry(pemData string, threshold time.Duration) (bool, error) {
