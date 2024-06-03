@@ -82,10 +82,10 @@ func checkAndUpdateCertificates(msg, path string, cfg *utility.Config) error{
 			remstate2 := utility.RemoveFile(path, entry.ClientCert.KeyFileName)
 
 			if !remstate1 && !remstate2 {
-				return fmt.Errorf("could not remove cert files %s and key file %s", entry.ServerCert.CertFileName, entry.ServerCert.KeyFileName)
+				return fmt.Errorf("could not remove cert files %s and key file %s", entry.ClientCert.CertFileName, entry.ClientCert.KeyFileName)
 			}
 
-			status := certgen.GenerateNewClient(caKey, caCert, msg, path, ENV, entry.ClientCert.CertFileName, entry.ClientCert.KeyFileName, entry.ClientCert.CommonNameStr, entry.ClientCert.SANStr)
+			status := certgen.GenerateNewClient(caKey, caCert, msg, path, ENV, entry.ClientCert.CertFileName, entry.ClientCert.KeyFileName, entry.ClientCert.CommonNameStr, entry.ClientCert.SANStr, entry.ClientCert.Type)
 
 			if !status{
 				return fmt.Errorf("error generating new client key and cert")
@@ -113,7 +113,7 @@ func checkAndUpdateCertificates(msg, path string, cfg *utility.Config) error{
 				return fmt.Errorf("could not remove server cert files %s and key file %s", entry.ServerCert.CertFileName, entry.ServerCert.KeyFileName)
 			}
 
-			status := certgen.GenerateNewServer(caKey, caCert, msg, path, ENV, entry.ServerCert.CertFileName, entry.ServerCert.KeyFileName, entry.ServerCert.CommonNameStr, entry.ServerCert.SANStr)
+			status := certgen.GenerateNewServer(caKey, caCert, msg, path, ENV, entry.ServerCert.CertFileName, entry.ServerCert.KeyFileName, entry.ServerCert.CommonNameStr, entry.ServerCert.SANStr, entry.ServerCert.Type)
 
 			if !status{
 				return fmt.Errorf("error generating new server key and cert")
@@ -212,7 +212,7 @@ func generateCertificatesFirstTime(path string, msg string, cfg *utility.Config,
 			utility.RemoveFile(path, entry.ClientCert.CertFileName)
 		}
 
-		status := certgen.GenerateClientCert(caCert, caCertificateBytes, caKey, msg, path, ENV, entry.ClientCert.CertFileName, entry.ClientCert.KeyFileName, entry.ClientCert.CommonNameStr, entry.ClientCert.SANStr)
+		status := certgen.GenerateClientCert(caCert, caCertificateBytes, caKey, msg, path, ENV, entry.ClientCert.CertFileName, entry.ClientCert.KeyFileName, entry.ClientCert.CommonNameStr, entry.ClientCert.SANStr, entry.ClientCert.Type)
 		if !status{
 			fmt.Println("There was an error generating the client cert for the first time")
 			return false
@@ -222,7 +222,7 @@ func generateCertificatesFirstTime(path string, msg string, cfg *utility.Config,
 			utility.RemoveFile(path, entry.ServerCert.KeyFileName)
 		}
 
-		status = certgen.GenerateServerCert(caCert, caKey, caCertificateBytes, msg, path, ENV, entry.ServerCert.CertFileName, entry.ServerCert.KeyFileName, entry.ServerCert.CommonNameStr, entry.ServerCert.SANStr)
+		status = certgen.GenerateServerCert(caCert, caKey, caCertificateBytes, msg, path, ENV, entry.ServerCert.CertFileName, entry.ServerCert.KeyFileName, entry.ServerCert.CommonNameStr, entry.ServerCert.SANStr, entry.ServerCert.Type)
 		
 		if !status{
 			fmt.Println("There was an error generating the server cert for the first time")

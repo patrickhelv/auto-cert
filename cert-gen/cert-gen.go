@@ -32,7 +32,7 @@ func GenerateCa() (bool, *x509.Certificate, *ecdsa.PrivateKey, []byte) {
 	return true, caCert, cakey, caCertificateBytes
 }
 
-func generateCertificateClient(caCert *x509.Certificate, cakey *ecdsa.PrivateKey, commonName string, san string) (bool, *ecdsa.PrivateKey, []byte) {
+func generateCertificateClient(caCert *x509.Certificate, cakey *ecdsa.PrivateKey, commonName string, san string, certType string) (bool, *ecdsa.PrivateKey, []byte) {
 
 	clientkey, err := client.GenerateECDSAeKey(elliptic.P256())
 
@@ -41,7 +41,7 @@ func generateCertificateClient(caCert *x509.Certificate, cakey *ecdsa.PrivateKey
 		return false, nil, nil
 	}
 	
-	clientCertBytes, err := client.GenerateClientCertificate(caCert, cakey, clientkey, time.Now().AddDate(1, 0, 0), "ros2-shim", commonName, san)
+	clientCertBytes, err := client.GenerateClientCertificate(caCert, cakey, clientkey, time.Now().AddDate(1, 0, 0), "ros2-shim", commonName, san, certType)
 
 	if err != nil {
 		fmt.Println("There was an error generating the client certificate")
@@ -52,7 +52,7 @@ func generateCertificateClient(caCert *x509.Certificate, cakey *ecdsa.PrivateKey
 }
 
 
-func generateSCertificateServer(caCert *x509.Certificate, cakey *ecdsa.PrivateKey, commonName string, san string) (bool, *ecdsa.PrivateKey, []byte){
+func generateSCertificateServer(caCert *x509.Certificate, cakey *ecdsa.PrivateKey, commonName string, san string, certType string) (bool, *ecdsa.PrivateKey, []byte){
 
 	serverKey, err := client.GenerateECDSAeKey(elliptic.P256())
 
@@ -61,7 +61,7 @@ func generateSCertificateServer(caCert *x509.Certificate, cakey *ecdsa.PrivateKe
 		return false, nil, nil
 	}
 
-	serverCertBytes, err := client.GenerateClientCertificate(caCert, cakey, serverKey, time.Now().AddDate(1, 0, 0), "controller", commonName, san)
+	serverCertBytes, err := client.GenerateClientCertificate(caCert, cakey, serverKey, time.Now().AddDate(1, 0, 0), "controller", commonName, san, certType)
 
 	if err != nil {
 		fmt.Println("There was an error generating the server certificate")
@@ -71,7 +71,7 @@ func generateSCertificateServer(caCert *x509.Certificate, cakey *ecdsa.PrivateKe
 	return true, serverKey, serverCertBytes
 }
 
-func GenerateNewClient(caKey string, certCA string, msg string, path string, ENV bool, variableName string, variableKeyName string, commonName string, san string) bool {
+func GenerateNewClient(caKey string, certCA string, msg string, path string, ENV bool, variableName string, variableKeyName string, commonName string, san string, certType string) bool {
 
 	cacert, err := ca.GetCert(certCA)
 	if err != nil {
@@ -86,7 +86,7 @@ func GenerateNewClient(caKey string, certCA string, msg string, path string, ENV
 
 	}
 
-	state, clientkey, clientCertBytes := generateCertificateClient(cacert, cakey, commonName, san)
+	state, clientkey, clientCertBytes := generateCertificateClient(cacert, cakey, commonName, san, certType)
 
 	if !state {
 		fmt.Printf("There was something wrong generating the new client cert and key")
@@ -114,7 +114,7 @@ func GenerateNewClient(caKey string, certCA string, msg string, path string, ENV
 	return true
 }
 
-func GenerateNewServer(caKey string, certCA string, msg string, path string, ENV bool, variableName string, variableNameKey string, commonName string, san string) bool {
+func GenerateNewServer(caKey string, certCA string, msg string, path string, ENV bool, variableName string, variableNameKey string, commonName string, san string, certType string) bool {
 
 	cacert, err := ca.GetCert(certCA)
 	if err != nil {
@@ -129,7 +129,7 @@ func GenerateNewServer(caKey string, certCA string, msg string, path string, ENV
 
 	}
 
-	state, serverkey, serverCertBytes := generateCertificateClient(cacert, cakey, commonName, san)
+	state, serverkey, serverCertBytes := generateCertificateClient(cacert, cakey, commonName, san, certType)
 
 	if !state {
 		fmt.Printf("There was something wrong generating the new client cert and key")
@@ -185,9 +185,9 @@ func EncryptCaCert(caCertificateBytes []byte, cakey *ecdsa.PrivateKey, msg strin
 
 }
 
-func GenerateClientCert(caCert *x509.Certificate, caCertificateBytes []byte, cakey *ecdsa.PrivateKey, msg string, path string, ENV bool, variableName string, variableNameKey string, commonName string, san string) (bool){
+func GenerateClientCert(caCert *x509.Certificate, caCertificateBytes []byte, cakey *ecdsa.PrivateKey, msg string, path string, ENV bool, variableName string, variableNameKey string, commonName string, san string, certType string) (bool){
 	
-	status, clientKey,clientCertBytes := generateCertificateClient(caCert, cakey, commonName, san)
+	status, clientKey,clientCertBytes := generateCertificateClient(caCert, cakey, commonName, san, certType)
 
 	if !status{
 		fmt.Println("There was an error generating the Client key and Client certificate")
@@ -219,9 +219,9 @@ func GenerateClientCert(caCert *x509.Certificate, caCertificateBytes []byte, cak
 }
 
 
-func GenerateServerCert(caCert *x509.Certificate, cakey *ecdsa.PrivateKey, caCertificateBytes []byte, msg string, path string, ENV bool, variableName string, variableKeyName string, commonName string, san string) bool {
+func GenerateServerCert(caCert *x509.Certificate, cakey *ecdsa.PrivateKey, caCertificateBytes []byte, msg string, path string, ENV bool, variableName string, variableKeyName string, commonName string, san string, certType string) bool {
 
-	status, serverkey, serverCertBytes := generateSCertificateServer(caCert, cakey, commonName, san)
+	status, serverkey, serverCertBytes := generateSCertificateServer(caCert, cakey, commonName, san, certType)
 
 	if !status {
 

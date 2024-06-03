@@ -152,6 +152,12 @@ func ReadCertConfig(filename string) (*Config, error) {
 	if err := scanner.Err(); err != nil {
 		return nil, err
 	}
+
+	for _,entry := range cfg.Hosts{
+		entry.ClientCert.Type = "clientCert"
+		entry.ServerCert.Type = "serverCert"
+	}
+	
 	return cfg, nil
 }
 
