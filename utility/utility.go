@@ -153,11 +153,6 @@ func ReadCertConfig(filename string) (*Config, error) {
 		return nil, err
 	}
 
-	for _,entry := range cfg.Hosts{
-		entry.ClientCert.Type = "clientCert"
-		entry.ServerCert.Type = "serverCert"
-	}
-	
 	return cfg, nil
 }
 

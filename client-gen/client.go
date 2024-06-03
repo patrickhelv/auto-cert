@@ -24,7 +24,7 @@ func GenerateECDSAeKey(curve elliptic.Curve) (*ecdsa.PrivateKey, error) {
 	return key, nil
 }
 
-func GenerateClientCertificate(caCert *x509.Certificate, caKey *ecdsa.PrivateKey, clientKey *ecdsa.PrivateKey, validity time.Time, name string, commonName string, san string, certType string) ([]byte, error) {
+func GenerateClientCertificate(caCert *x509.Certificate, caKey *ecdsa.PrivateKey, clientKey *ecdsa.PrivateKey, validity time.Time, name string, commonName string, san string) ([]byte, error) {
 	serialNumber, err := rand.Int(rand.Reader, new(big.Int).Lsh(big.NewInt(1), 256))
 	if err != nil {
 		return nil, err
@@ -38,18 +38,41 @@ func GenerateClientCertificate(caCert *x509.Certificate, caKey *ecdsa.PrivateKey
 		},
 		NotBefore:   time.Now(),
 		NotAfter:    validity, // 1 year validity time.Now().AddDate(1, 0, 0) time.Now().Add(365 * 24 * time.Hour)
-
+		ExtKeyUsage: []x509.ExtKeyUsage{x509.ExtKeyUsageClientAuth},
 		KeyUsage:    x509.KeyUsageDigitalSignature | x509.KeyUsageKeyEncipherment,
 		IsCA:        false,
 	}
 
-	// Set the Extended Key Usage based on the certificate type
-    switch certType {
-    case "clientCert":
-        clientCert.ExtKeyUsage = []x509.ExtKeyUsage{x509.ExtKeyUsageClientAuth}
-    case "serverCert":
-        clientCert.ExtKeyUsage = []x509.ExtKeyUsage{x509.ExtKeyUsageServerAuth}
-    }
+	if san != "" {
+		clientCert.DNSNames = []string{san}
+	}
+
+	clientCertBytes, err := x509.CreateCertificate(rand.Reader, clientCert, caCert, &clientKey.PublicKey, caKey)
+	if err != nil {
+		return nil, err
+	}
+
+	return clientCertBytes, nil
+}
+
+func GenerateServerCert(caCert *x509.Certificate, caKey *ecdsa.PrivateKey, clientKey *ecdsa.PrivateKey, validity time.Time, name string, commonName string, san string) ([]byte, error) {
+	serialNumber, err := rand.Int(rand.Reader, new(big.Int).Lsh(big.NewInt(1), 256))
+	if err != nil {
+		return nil, err
+	}
+
+	clientCert := &x509.Certificate{
+		SerialNumber: serialNumber,
+		Subject: pkix.Name{
+			CommonName:   commonName,
+			Organization: []string{name},
+		},
+		NotBefore:   time.Now(),
+		NotAfter:    validity, // 1 year validity time.Now().AddDate(1, 0, 0) time.Now().Add(365 * 24 * time.Hour)
+		ExtKeyUsage: []x509.ExtKeyUsage{x509.ExtKeyUsageServerAuth},
+		KeyUsage:    x509.KeyUsageDigitalSignature | x509.KeyUsageKeyEncipherment,
+		IsCA:        false,
+	}
 
 	if san != "" {
 		clientCert.DNSNames = []string{san}
