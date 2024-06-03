@@ -24,7 +24,7 @@ func GenerateECDSAeKey(curve elliptic.Curve) (*ecdsa.PrivateKey, error) {
 	return key, nil
 }
 
-func GenerateClientCertificate(caCert *x509.Certificate, caKey *ecdsa.PrivateKey, clientKey *ecdsa.PrivateKey, validity time.Time, name string) ([]byte, error) {
+func GenerateClientCertificate(caCert *x509.Certificate, caKey *ecdsa.PrivateKey, clientKey *ecdsa.PrivateKey, validity time.Time, name string, commonName string, san string) ([]byte, error) {
 	serialNumber, err := rand.Int(rand.Reader, new(big.Int).Lsh(big.NewInt(1), 256))
 	if err != nil {
 		return nil, err
@@ -33,6 +33,7 @@ func GenerateClientCertificate(caCert *x509.Certificate, caKey *ecdsa.PrivateKey
 	clientCert := &x509.Certificate{
 		SerialNumber: serialNumber,
 		Subject: pkix.Name{
+			CommonName:   commonName,
 			Organization: []string{name},
 		},
 		NotBefore:   time.Now(),
@@ -41,6 +42,10 @@ func GenerateClientCertificate(caCert *x509.Certificate, caKey *ecdsa.PrivateKey
 		KeyUsage:    x509.KeyUsageDigitalSignature | x509.KeyUsageKeyEncipherment,
 		ExtKeyUsage: []x509.ExtKeyUsage{x509.ExtKeyUsageClientAuth},
 		IsCA:        false,
+	}
+
+	if san != "" {
+		clientCert.DNSNames = []string{san}
 	}
 
 	clientCertBytes, err := x509.CreateCertificate(rand.Reader, clientCert, caCert, &clientKey.PublicKey, caKey)

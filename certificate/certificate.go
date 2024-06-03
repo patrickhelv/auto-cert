@@ -1,7 +1,9 @@
 package cert
 
-// Certificate represents a common interface for all certificate types.
+// Certificate is an interface for handling certificates.
 type Certificate interface {
 	TypeName() string
 	FileNames() (certName, keyName string)
+	CommonName() string
+	SubjectAltName() string
 }

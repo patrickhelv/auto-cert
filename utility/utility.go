@@ -43,8 +43,7 @@ type Token struct {
 
 // Config structure now holds slices of specific certificate types.
 type Config struct {
-    ClientCerts []cert.ClientCertificate
-    ServerCerts []cert.ServerCertificate
+    Hosts  map[string]cert.HostConfig
     Tokens      []cert.Token
 }
 
@@ -85,65 +84,75 @@ func readConfigFile(filePath string) (map[string]string, error) {
 	return config, nil
 }
 
-func ReadCertConfig(filename string) (*Config, error){
-    file, err := os.Open(filename)
-    if err != nil {
-        return nil, err
-    }
-    defer file.Close()
+func ReadCertConfig(filename string) (*Config, error) {
+	file, err := os.Open(filename)
+	if err != nil {
+		return nil, err
+	}
+	defer file.Close()
 
-    scanner := bufio.NewScanner(file)
-    cfg := &Config{}
-    var currentKey string
+	scanner := bufio.NewScanner(file)
+	cfg := &Config{
+		Hosts: make(map[string]cert.HostConfig),
+	}
+	var currentSection string
+	var currentHost string
 
-    for scanner.Scan() {
-        line := strings.TrimSpace(scanner.Text())
-        if strings.HasPrefix(line, "[") && strings.HasSuffix(line, "]") {
-            currentKey = line
-        } else {
-            parts := strings.SplitN(line, ":", 2)
-            if len(parts) == 2 {
-                key := strings.TrimSpace(parts[0])
-                value := strings.TrimSpace(parts[1])
-                if currentKey == "[clientcert]" {
-                    if key == "NAME" {
-                        cfg.ClientCerts = append(cfg.ClientCerts, cert.ClientCertificate{
-                            Type:        "Client",
-                            CertFileName: value,
-                            KeyFileName:  "", // Placeholder, to be filled in next valid KEYNAME
-                        })
-                    } else if key == "KEYNAME" && len(cfg.ClientCerts) > 0 {
-                        cfg.ClientCerts[len(cfg.ClientCerts)-1].KeyFileName = value
-                    }
-                } else if currentKey == "[servercert]" {
-                    if key == "NAME" {
-                        cfg.ServerCerts = append(cfg.ServerCerts, cert.ServerCertificate{
-                            Type:        "Server",
-                            CertFileName: value,
-                            KeyFileName:  "", // Placeholder, to be filled in next valid KEYNAME
-                        })
-                    } else if key == "KEYNAME" && len(cfg.ServerCerts) > 0 {
-                        cfg.ServerCerts[len(cfg.ServerCerts)-1].KeyFileName = value
-                    }
-                } else if currentKey == "[token]" {
-                    if key == "NAME" {
+	for scanner.Scan() {
+		line := strings.TrimSpace(scanner.Text())
+		if strings.HasPrefix(line, "[") && strings.HasSuffix(line, "]") {
+			currentSection = line
+			if currentSection != "[token]" {
+				currentHost = strings.Trim(currentSection, "[]")
+			}
+		} else {
+			parts := strings.SplitN(line, ":", 2)
+			if len(parts) == 2 {
+				key := strings.TrimSpace(parts[0])
+				value := strings.TrimSpace(parts[1])
+				if strings.HasPrefix(currentSection, "[host") {
+					if _, exists := cfg.Hosts[currentHost]; !exists {
+						cfg.Hosts[currentHost] = cert.HostConfig{}
+					}
+					hostConfig := cfg.Hosts[currentHost]
+					switch key {
+					case "server_cert_name":
+						hostConfig.ServerCert.CertFileName = value
+					case "server_key_name":
+						hostConfig.ServerCert.KeyFileName = value
+					case "server_cn":
+						hostConfig.ServerCert.CommonNameStr = value
+					case "server_san":
+						hostConfig.ServerCert.SANStr = value
+					case "client_cert_name":
+						hostConfig.ClientCert.CertFileName = value
+					case "client_key_name":
+						hostConfig.ClientCert.KeyFileName = value
+					case "client_cn":
+						hostConfig.ClientCert.CommonNameStr = value
+					case "client_san":
+						hostConfig.ClientCert.SANStr = value
+					}
+					cfg.Hosts[currentHost] = hostConfig
+				} else if currentSection == "[token]" {
+					if key == "NAME" {
                         cfg.Tokens = append(cfg.Tokens, cert.Token{
                             Type:         "Token",
                             TokenFileName: value,
                             KeyFileName:  "", // Placeholder, to be filled in next valid KEYNAME
                         })
-                    } else if key == "KEYNAME" && len(cfg.Tokens) > 0 {
-                        cfg.Tokens[len(cfg.Tokens)-1].KeyFileName = value
-                    }
-                }
-            }
-        }
-    }
+					} else if key == "KEYNAME" && len(cfg.Tokens) > 0 {
+						cfg.Tokens[len(cfg.Tokens)-1].KeyFileName = value
+					}
+				}
+			}
+		}
+	}
 
-    if err := scanner.Err(); err != nil {
-        return nil, err
-    }
-    return cfg, nil
+	if err := scanner.Err(); err != nil {
+		return nil, err
+	}
+	return cfg, nil
 }
 
 func FetchConfigFile(configFile string) ([]string, error) {

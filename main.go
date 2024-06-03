@@ -61,9 +61,10 @@ func checkAndUpdateCertificates(msg, path string, cfg *utility.Config) error{
 		return fmt.Errorf("there is an error in decrypting the caCert and the caKey, %v", err)
 	}
 
-	for _,entry := range cfg.ClientCerts{
+	for host,entry := range cfg.Hosts{
+		fmt.Printf("Processing certificates for host: %s\n", host)
 
-		clientCert, err := client.DecodeAndDecryptCertClient(path, msg, entry.CertFileName, ENV)
+		clientCert, err := client.DecodeAndDecryptCertClient(path, msg, entry.ClientCert.CertFileName, ENV)
 
 		if err != nil{
 			return fmt.Errorf("there was an error decoding and decrypting the Cert Client %v", err)
@@ -77,30 +78,27 @@ func checkAndUpdateCertificates(msg, path string, cfg *utility.Config) error{
 
 		if expired{
 
-			remstate1 := utility.RemoveFile(path, entry.CertFileName)
-			remstate2 := utility.RemoveFile(path, entry.KeyFileName)
+			remstate1 := utility.RemoveFile(path, entry.ClientCert.CertFileName)
+			remstate2 := utility.RemoveFile(path, entry.ClientCert.KeyFileName)
 
 			if !remstate1 && !remstate2 {
-				return fmt.Errorf("could not remove cert files %s and key file %s", entry.CertFileName, entry.KeyFileName)
+				return fmt.Errorf("could not remove cert files %s and key file %s", entry.ServerCert.CertFileName, entry.ServerCert.KeyFileName)
 			}
 
-			status := certgen.GenerateNewClient(caKey, caCert, msg, path, ENV, entry.CertFileName, entry.KeyFileName)
+			status := certgen.GenerateNewClient(caKey, caCert, msg, path, ENV, entry.ClientCert.CertFileName, entry.ClientCert.KeyFileName, entry.ClientCert.CommonNameStr, entry.ClientCert.SANStr)
 
 			if !status{
 				return fmt.Errorf("error generating new client key and cert")
 			}
 		}
 
-	}
-
-	for _,entry := range cfg.ServerCerts{
-		serverCert, err := client.DecodeAndDecryptCertServer(path, msg, entry.CertFileName, ENV)
+		serverCert, err := client.DecodeAndDecryptCertServer(path, msg, entry.ServerCert.CertFileName, ENV)
 
 		if err != nil{
 			return fmt.Errorf("there was an error decoding and decrypting the server cert, %v", err)
 		}
 
-		expired, err := ca.CheckCertExpiry(serverCert, 36*time.Hour)
+		expired, err = ca.CheckCertExpiry(serverCert, 36*time.Hour)
 
 		if err != nil {
 			return fmt.Errorf("there was something wrong with the server cert check for expiry")
@@ -108,14 +106,14 @@ func checkAndUpdateCertificates(msg, path string, cfg *utility.Config) error{
 
 		if expired{
 
-			remstate1 := utility.RemoveFile(path, entry.CertFileName)
-			remstate2 := utility.RemoveFile(path, entry.KeyFileName)
+			remstate1 := utility.RemoveFile(path, entry.ServerCert.CertFileName)
+			remstate2 := utility.RemoveFile(path, entry.ServerCert.KeyFileName)
 
 			if !remstate1 && !remstate2 {
-				return fmt.Errorf("could not remove cert files %s and key file %s", entry.CertFileName, entry.KeyFileName)
+				return fmt.Errorf("could not remove server cert files %s and key file %s", entry.ServerCert.CertFileName, entry.ServerCert.KeyFileName)
 			}
 
-			status := certgen.GenerateNewServer(caKey, caCert, msg, path, ENV, entry.CertFileName, entry.KeyFileName)
+			status := certgen.GenerateNewServer(caKey, caCert, msg, path, ENV, entry.ServerCert.CertFileName, entry.ServerCert.KeyFileName, entry.ServerCert.CommonNameStr, entry.ServerCert.SANStr)
 
 			if !status{
 				return fmt.Errorf("error generating new server key and cert")
@@ -126,7 +124,7 @@ func checkAndUpdateCertificates(msg, path string, cfg *utility.Config) error{
 	return nil
 }
 
-func checkAndUpdateCA(msg, path string, cfg *utility.Config, ip string) (error){
+func checkAndUpdateCA(msg, path string, cfg *utility.Config) (error){
 	caCert, _, err := ca.DecryptAndDecodeCa(path, msg, ENV)
 
 	fmt.Println("Checking CA...")
@@ -142,7 +140,7 @@ func checkAndUpdateCA(msg, path string, cfg *utility.Config, ip string) (error){
 
 	if status{
 
-		status, caCertNew, caKeyNew, caCertificateBytes := certgen.GenerateCa(ip)
+		status, caCertNew, caKeyNew, caCertificateBytes := certgen.GenerateCa()
 
 		if !status{
 			return fmt.Errorf("there was an error generacting a new CA after the expiry date")
@@ -173,9 +171,9 @@ func checkAndUpdateCA(msg, path string, cfg *utility.Config, ip string) (error){
 
 
 
-func checkAndUpdateAll(msg string, path string, cfg *utility.Config, ip string) bool {
+func checkAndUpdateAll(msg string, path string, cfg *utility.Config) bool {
 
-	if err := checkAndUpdateCA(msg, path, cfg, ip); err != nil{
+	if err := checkAndUpdateCA(msg, path, cfg); err != nil{
 		fmt.Printf("there was an error checking CA %v\n", err)
 		return false
 	}
@@ -194,7 +192,7 @@ func checkAndUpdateAll(msg string, path string, cfg *utility.Config, ip string) 
 }
 
 
-func checkExpiryLoop(msg string, path string, cfg *utility.Config, ip string) {
+func checkExpiryLoop(msg string, path string, cfg *utility.Config) {
 
 	status := true
 
@@ -203,31 +201,28 @@ func checkExpiryLoop(msg string, path string, cfg *utility.Config, ip string) {
 
 		time.Sleep(36 * time.Hour)
 
-		status = checkAndUpdateAll(msg, path, cfg, ip)
+		status = checkAndUpdateAll(msg, path, cfg)
 	}
 }
 
 func generateCertificatesFirstTime(path string, msg string, cfg *utility.Config, caCert *x509.Certificate, caKey *ecdsa.PrivateKey, caCertificateBytes []byte) (bool){
-	for _,entry := range cfg.ClientCerts{
+	for _,entry := range cfg.Hosts{
 
-		if utility.CheckIfFileExists(path, entry.CertFileName) {
-			utility.RemoveFile(path, entry.CertFileName)
+		if utility.CheckIfFileExists(path, entry.ClientCert.CertFileName) {
+			utility.RemoveFile(path, entry.ClientCert.CertFileName)
 		}
 
-		status := certgen.GenerateClientCert(caCert, caCertificateBytes, caKey, msg, path, ENV, entry.CertFileName, entry.KeyFileName)
+		status := certgen.GenerateClientCert(caCert, caCertificateBytes, caKey, msg, path, ENV, entry.ClientCert.CertFileName, entry.ClientCert.KeyFileName, entry.ClientCert.CommonNameStr, entry.ClientCert.SANStr)
 		if !status{
 			fmt.Println("There was an error generating the client cert for the first time")
 			return false
 		}
-	}
-
-	for _,entry := range cfg.ServerCerts{
-
-		if utility.CheckIfFileExists(path, entry.CertFileName) {
-			utility.RemoveFile(path, entry.CertFileName)
+	
+		if utility.CheckIfFileExists(path, entry.ServerCert.CertFileName) {
+			utility.RemoveFile(path, entry.ServerCert.KeyFileName)
 		}
 
-		status := certgen.GenerateServerCert(caCert, caKey, caCertificateBytes, msg, path, ENV, entry.CertFileName, entry.KeyFileName)
+		status = certgen.GenerateServerCert(caCert, caKey, caCertificateBytes, msg, path, ENV, entry.ServerCert.CertFileName, entry.ServerCert.KeyFileName, entry.ServerCert.CommonNameStr, entry.ServerCert.SANStr)
 		
 		if !status{
 			fmt.Println("There was an error generating the server cert for the first time")
@@ -258,7 +253,6 @@ func main() {
 
 	var path string
 	var msg string
-	var ip string
 
 	var caCert *x509.Certificate
 	var caKey *ecdsa.PrivateKey
@@ -283,7 +277,6 @@ func main() {
 
 		path = config[0]
 		msg = config[1]
-		ip = config[2]
 		ENV = false
 
 	}else{
@@ -308,7 +301,7 @@ func main() {
 		}
 
 		fmt.Println("Generating CA for the first time")
-		status, caCert, caKey, caCertificateBytes = certgen.GenerateCa(ip)
+		status, caCert, caKey, caCertificateBytes = certgen.GenerateCa()
 
 		if !status {
 			fmt.Println("There was an error generating the first CA")
@@ -327,7 +320,7 @@ func main() {
 	if caCert == nil && caKey == nil{
 		
 		fmt.Println("Generating client and server certificates specified in the configcerts.ini")
-		status := checkAndUpdateAll(msg, path, cfg, ip)
+		status := checkAndUpdateAll(msg, path, cfg)
 		if !status{
 			return
 		}
@@ -341,6 +334,6 @@ func main() {
 		}
 	}
 
-	checkExpiryLoop(msg, path, cfg, ip)
+	checkExpiryLoop(msg, path, cfg)
 
 }
