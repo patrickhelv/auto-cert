@@ -19,5 +19,8 @@ WORKDIR /root/
 
 COPY --from=builder /app/autocert .
 COPY config /root/config
+COPY ansible.cfg /root/
+COPY inventory /root/inventory
+COPY playbooks /root/playbooks
 
 CMD ["./autocert"]

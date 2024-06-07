@@ -1,16 +1,18 @@
 package utility
 
 import (
+	"auto-cert/certificate"
 	"bufio"
 	"bytes"
-	"encoding/pem"
-	"crypto/x509"
 	"crypto/ecdsa"
+	"crypto/x509"
+	"encoding/pem"
 	"fmt"
-	"gopkg.in/yaml.v2"
 	"os"
+	"os/exec"
 	"strings"
-	"auto-cert/certificate"
+
+	"gopkg.in/yaml.v2"
 )
 
 type CaCertification struct {
@@ -159,6 +161,7 @@ func ReadCertConfig(filename string) (*Config, error) {
 func FetchConfigFile(configFile string) ([]string, error) {
 	var CONFIG_VAULT_PATH = "VAULT_PATH"
 	var CONFIG_VAULT_PASS = "VAULT_PASS"
+	var CONFIG_PLAYBOOK = "PLAYBOOK_OPTION"
 
 	var result []string
 
@@ -180,6 +183,11 @@ func FetchConfigFile(configFile string) ([]string, error) {
 	} else {
 		return nil, err
 	}
+
+	if val, exists := configFileMap[CONFIG_PLAYBOOK]; exists {
+		result = append(result, val)
+	}
+
 
 	return result, nil
 }
@@ -408,4 +416,25 @@ func RemoveFile(path string, name string) bool {
 	}
 
 	return true
+}
+
+func ExecutePlayBook(category string, vaultPasswordFile string) (error){
+
+	var cmds []*exec.Cmd
+	
+	if category == "token-refresh"{
+		cmds =  append(cmds, exec.Command("ansible-playbook", "./playbooks/token_update_task.yaml", "--vault-password-file", vaultPasswordFile))
+	}else if category == "cert-refresh"{
+		cmds =  append(cmds, exec.Command("ansible-playbook", "./playbooks/shim_1_task.yaml", "--vault-password-file", vaultPasswordFile))
+		cmds = append(cmds, exec.Command("ansible-playbook", "./playbooks/shim_2_task.yaml", "--vault-password-file", vaultPasswordFile))
+	}
+	 
+	for _, cmd := range cmds {
+        err := cmd.Run()
+        if err != nil {
+            return fmt.Errorf("failed to execute playbook %s: %v", category, err)
+        }
+    }
+ 
+	return nil
 }

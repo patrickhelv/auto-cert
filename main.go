@@ -10,6 +10,7 @@ import (
 	"crypto/x509"
 	"fmt"
 	"os"
+	"strconv"
 	"time"
 )
 
@@ -23,7 +24,7 @@ type CaCertificate struct{
 }
 
 
-func checkAndUpdateToken(msg string, path string, cfg *utility.Config) error {
+func checkAndUpdateToken(msg string, path string, cfg *utility.Config, playbookconf bool) error {
     
 	fmt.Println("Checking token...")
 
@@ -44,6 +45,10 @@ func checkAndUpdateToken(msg string, path string, cfg *utility.Config) error {
 			if err != nil {
 				return fmt.Errorf("error regenerating a token: %v", err)
 			}
+
+			if playbookconf{
+				utility.ExecutePlayBook("token-refresh", msg)
+			}
 		}
 	}
 
@@ -51,7 +56,7 @@ func checkAndUpdateToken(msg string, path string, cfg *utility.Config) error {
 }
 
 
-func checkAndUpdateCertificates(msg, path string, cfg *utility.Config) error{
+func checkAndUpdateCertificates(msg, path string, cfg *utility.Config, playbookconf bool) error{
 	
 	caCert, caKey, err := ca.DecryptAndDecodeCa(path, msg, ENV)
 
@@ -118,6 +123,10 @@ func checkAndUpdateCertificates(msg, path string, cfg *utility.Config) error{
 			if !status{
 				return fmt.Errorf("error generating new server key and cert")
 			}
+
+			if playbookconf{
+				utility.ExecutePlayBook("cert-refresh", msg)
+			}
 		}
 	}
 
@@ -171,19 +180,19 @@ func checkAndUpdateCA(msg, path string, cfg *utility.Config) (error){
 
 
 
-func checkAndUpdateAll(msg string, path string, cfg *utility.Config) bool {
+func checkAndUpdateAll(msg string, path string, cfg *utility.Config, playbookconf bool) bool {
 
 	if err := checkAndUpdateCA(msg, path, cfg); err != nil{
 		fmt.Printf("there was an error checking CA %v\n", err)
 		return false
 	}
 
-    if err := checkAndUpdateToken(msg, path, cfg); err != nil {
+    if err := checkAndUpdateToken(msg, path, cfg, playbookconf); err != nil {
 		fmt.Printf("there was an error checking tokens %v\n", err)
         return false
     }
 
-    if err := checkAndUpdateCertificates(msg, path, cfg); err != nil {
+    if err := checkAndUpdateCertificates(msg, path, cfg, playbookconf); err != nil {
 		fmt.Printf("there was an error checking certificates %v\n", err)
         return false
     }
@@ -192,7 +201,7 @@ func checkAndUpdateAll(msg string, path string, cfg *utility.Config) bool {
 }
 
 
-func checkExpiryLoop(msg string, path string, cfg *utility.Config) {
+func checkExpiryLoop(msg string, path string, cfg *utility.Config, playbookconf bool) {
 
 	status := true
 
@@ -201,7 +210,7 @@ func checkExpiryLoop(msg string, path string, cfg *utility.Config) {
 
 		time.Sleep(36 * time.Hour)
 
-		status = checkAndUpdateAll(msg, path, cfg)
+		status = checkAndUpdateAll(msg, path, cfg, playbookconf)
 	}
 }
 
@@ -260,6 +269,8 @@ func main() {
 
 	var status bool
 
+	var playbookconf bool
+
 
 	var CONFIG_VAULT_PATH = "VAULT_PATH"
 	var CONFIG_VAULT_PASS = "ANSIBLE_VAULT_PASSWORD"
@@ -277,6 +288,12 @@ func main() {
 
 		path = config[0]
 		msg = config[1]
+		playbookconf = false
+		
+		if len(config) == 3{
+			playbookconf,_ = strconv.ParseBool(config[2])
+		}
+
 		ENV = false
 
 	}else{
@@ -320,7 +337,7 @@ func main() {
 	if caCert == nil && caKey == nil{
 		
 		fmt.Println("Generating client and server certificates specified in the configcerts.ini")
-		status := checkAndUpdateAll(msg, path, cfg)
+		status := checkAndUpdateAll(msg, path, cfg, playbookconf)
 		if !status{
 			return
 		}
@@ -334,6 +351,6 @@ func main() {
 		}
 	}
 
-	checkExpiryLoop(msg, path, cfg)
+	checkExpiryLoop(msg, path, cfg, playbookconf)
 
 }
