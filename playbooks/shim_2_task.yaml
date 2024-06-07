@@ -1,5 +1,5 @@
 - name: Deploy and execute ros2 shim on k3s agent nodes
-  hosts: shim_1
+  hosts: shim_2
   become: yes  # Use sudo to become root
   vars_files:
     - ~/ansible-vault/client_cert_shim_2.yaml

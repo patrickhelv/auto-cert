@@ -42,6 +42,7 @@ Then we need to create 3 files configfile.txt and password.txt (that holds the v
 ```txt
 VAULT_PATH = /mnt/
 VAULT_PASS = /root/config/password.txt
+PLAYBOOK_OPTION = bool (OPTIONAL) 
 ```
 
 ```bash
@@ -78,6 +79,32 @@ KEYNAME: {INSERT NAME OF KEY FILE HERE}
 NAME: {INSERT NAME OF FILE HERE}
 KEYNAME: {INSERT NAME OF KEY FILE HERE}
 ```
+
+### Running the auto deploy using ansible playbooks
+
+Before activating and running automatically the playbooks you need to modify some options
+
+Move over to the inventory folder
+```bash
+cd inventory
+```
+
+Replace all the ``ip-node-1`` and ``ip-node-2`` references with the ip addresses of the nodes you want
+your playbooks to execute on. 
+
+```ini
+[k3s_agents]
+ip-node-1 ansible_user=user ansible_ssh_private_key_file=~/.ssh/id_ecdsa ansible_connection=ssh
+ip-node-2 ansible_user=user ansible_ssh_private_key_file=~/.ssh/id_ecdsa ansible_connection=ssh
+
+[shim_1]
+ip-node-1 ansible_user=user ansible_ssh_private_key_file=~/.ssh/id_ecdsa ansible_connection=ssh
+
+[shim_2]
+ip-node-2 ansible_user=user ansible_ssh_private_key_file=~/.ssh/id_ecdsa ansible_connection=ssh
+```
+
+You should now be good to go and activate the ``PLAYBOOK_OPTION`` in the configfile.txt.
 
 ### Docker
 
