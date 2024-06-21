@@ -55,29 +55,83 @@ write your password in this file of course without brackets
 [YOUR ansible-vault PASSWORD] 
 ```
 
+We know create the configcerts.ini file
+
+```bash
+[nano or nvim] configcerts.ini
+```
+
+
 This is an example configcerts.ini file
 
 ```ini
-[clientcert]
-NAME: {INSERT NAME OF FILE HERE}
-KEYNAME:{INSERT NAME OF KEY FILE HERE}
-...
-NAME: {INSERT NAME OF FILE HERE}
-KEYNAME: {INSERT NAME OF KEY FILE HERE}
+[NAME OF HOST]
+server_cert_name: {INSERT NAME OF FILE HERE}
+server_key_name:{INSERT NAME OF KEY FILE HERE}
+server_cn: {INSERT NAME OF SERVER DNS COMMON NAME HERE}
+server_san: {INSERT NAME OF SERVER DNS SUBJECTIVE ALTERNATIVE NAME HERE}
+client_cert_name: {INSERT NAME OF FILE HERE}
+client_key_name:{INSERT NAME OF KEY FILE HERE}
+client_cn: {INSERT NAME OF SERVER DNS COMMON NAME HERE}
+client_san: {INSERT NAME OF SERVER DNS SUBJECTIVE ALTERNATIVE NAME HERE}
 
-[servercert]
-NAME: {INSERT NAME OF FILE HERE}
-KEYNAME: {INSERT NAME OF KEY FILE HERE}
-...
-NAME: {INSERT NAME OF FILE HERE}
-KEYNAME: {INSERT NAME OF KEY FILE HERE}
+[NAME OF HOST 2]
+server_cert_name: {INSERT NAME OF FILE HERE}
+server_key_name:{INSERT NAME OF KEY FILE HERE}
+server_cn: {INSERT NAME OF SERVER DNS COMMON NAME HERE}
+server_san: {INSERT NAME OF SERVER DNS SUBJECTIVE ALTERNATIVE NAME HERE}
+client_cert_name: {INSERT NAME OF FILE HERE}
+client_key_name:{INSERT NAME OF KEY FILE HERE}
+client_cn: {INSERT NAME OF SERVER DNS COMMON NAME HERE}
+client_san: {INSERT NAME OF SERVER DNS SUBJECTIVE ALTERNATIVE NAME HERE}
+
+....
 
 [token]
-NAME: {INSERT NAME OF FILE HERE}
-KEYNAME: {INSERT NAME OF KEY FILE HERE}
-...
-NAME: {INSERT NAME OF FILE HERE}
-KEYNAME: {INSERT NAME OF KEY FILE HERE}
+NAME: {INSERT NAME OF TOKEN FILE HERE}
+KEYNAME: {INSERT NAME OF TOKEN KEY FILE HERE}
+NAME: {INSERT NAME OF TOKEN FILE HERE}
+KEYNAME: {INSERT NAME OF TOKEN KEY FILE HERE}
+```
+
+a template like this for 3 nodes, in a cluster
+
+```ini
+[host1]
+server_cert_name: server_cert_ctrl
+server_key_name: server_key_ctrl
+server_cn: host1.local
+server_san: host1.local
+client_cert_name: client_cert_ctrl
+client_key_name: client_key_ctrl
+client_cn: host1.local
+client_san: host1.local
+
+[host2]
+server_cert_name: server_cert_shim_1
+server_key_name: server_key_shim_1
+server_cn: host2.local
+server_san: host2.local
+client_cert_name: client_cert_shim_1
+client_key_name: client_key_shim_1
+client_cn: host2.local
+client_san: host2.local
+
+[host3]
+server_cert_name: server_cert_shim_2
+server_key_name: server_key_shim_2
+server_cn: host3.local
+server_san: host3.local
+client_cert_name: client_cert_shim_2
+client_key_name: client_key_shim_2
+client_cn: host3.local
+client_san: host3.local
+
+[token]
+NAME: token_ctrl
+KEYNAME: token_key_ctrl
+NAME: token_shim
+KEYNAME: token_key_shim
 ```
 
 ### Running the auto deploy using ansible playbooks
