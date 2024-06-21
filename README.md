@@ -143,19 +143,38 @@ Move over to the inventory folder
 cd inventory
 ```
 
-Replace all the ``ip-node-1`` and ``ip-node-2`` references with the ip addresses of the nodes you want
-your playbooks to execute on. 
+The k3s-agents are all the ros2 shims nodes you have in your cluster. You need to generate ssh key pairs for every
+node in your cluster. Rename the file from k3s-agents-example to k3s-agents.ini.
+
+```bash
+nano/vi k3s-agents-example.ini
+```
+
+To generate a new keypair of ssh keys
+
+```bash
+ssh-keygen -t ecdsa -b 521 -f ~/.ssh/id_ecdsa_#
+```
+
+Copy your public ssh keys over to your nodes
+
+```bash
+ssh-copy-id -i ~/.ssh/id_ecdsa_#.pub user@ip-node-1
+ssh-copy-id -i ~/.ssh/id_ecdsa_#.pub user@ip-node-2
+```
+
+You need to specify the ip ``(ip-node-1)`` for each node and the user login for each node ``(ansible_user=user)``. You keep your private keys and use add them to the ini file.
 
 ```ini
 [k3s_agents]
 ip-node-1 ansible_user=user ansible_ssh_private_key_file=~/.ssh/id_ecdsa ansible_connection=ssh
 ip-node-2 ansible_user=user ansible_ssh_private_key_file=~/.ssh/id_ecdsa ansible_connection=ssh
 
-[shim_1]
-ip-node-1 ansible_user=user ansible_ssh_private_key_file=~/.ssh/id_ecdsa ansible_connection=ssh
+[host1]
+ip-node-1 ansible_user=user ansible_ssh_private_key_file=~/.ssh/id_ecdsa_1 ansible_connection=ssh
 
-[shim_2]
-ip-node-2 ansible_user=user ansible_ssh_private_key_file=~/.ssh/id_ecdsa ansible_connection=ssh
+[host2]
+ip-node-2 ansible_user=user ansible_ssh_private_key_file=~/.ssh/id_ecdsa_2 ansible_connection=ssh
 ```
 
 You should now be good to go and activate the ``PLAYBOOK_OPTION`` in the configfile.txt.

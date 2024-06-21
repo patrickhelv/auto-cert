@@ -12,9 +12,20 @@ spec:
       labels:
         app: autocert
     spec:
+      tolerations:
+      - key: "node-role.kubernetes.io/master"
+        operator: "Exists"
+        effect: "NoSchedule"
+      affinity:
+        nodeAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            nodeSelectorTerms:
+            - matchExpressions:
+              - key: "node-role.kubernetes.io/master"
+                operator: "Exists"
       containers:
       - name: auto-cert
-        image: localhost:5000/auto-cert:latest
+        image: localhost:5001/auto-cert:latest
         ports:
         - containerPort: 7000
         volumeMounts:
