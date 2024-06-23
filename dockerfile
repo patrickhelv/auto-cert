@@ -18,7 +18,7 @@ RUN apk update && \
 
 WORKDIR /root/
 
-ENV CUSTOM_HOME=/home/pitemp
+ENV CUSTOM_HOME=
 
 COPY --from=builder /app/autocert .
 COPY config /root/config

@@ -181,6 +181,11 @@ You should now be good to go and activate the ``PLAYBOOK_OPTION`` in the configf
 
 ### Docker
 
+You need to change this line ``ENV CUSTOM_HOME=`` and add your homepath on your nodes in your cluster.
+```
+nano dockerfile
+```
+
 ```bash
 docker-compose up --build
 ```
