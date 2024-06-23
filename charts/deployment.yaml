@@ -30,9 +30,14 @@ spec:
         - containerPort: 7000
         volumeMounts:
         - name: ansible-vault-volume
-          mountPath: /mnt/
+          mountPath: /mnt/ansible-vault
+        - name: ssh-volume
+          mountPath: /mnt/.ssh
       volumes:
       - name: ansible-vault-volume
+        persistentVolumeClaim:
+          claimName: host-pvc
+      - name: ssh-volume
         hostPath:
-          path: /home/pitemp/ansible-vault/
-          type: Directory
+          path: HOMEPATH/.ssh
+          type: DirectoryOrCreate

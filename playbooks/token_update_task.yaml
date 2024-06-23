@@ -2,17 +2,17 @@
   hosts: k3s_agents
   become: yes  # Use sudo to become root
   vars_files:
-    - ~/ansible-vault/token_shim.yaml
-    - ~/ansible-vault/token_key_ctrl.yaml
+    - /mnt/ansible-vault/token_shim.yaml
+    - /mnt/ansible-vault/token_key_ctrl.yaml
   tasks:
     - name: Copy token to target node
       copy:
         content: "{{ token }}"
-        dest: HOMEPATH/ros2-node-shim/ca/token_shim.txt
+        dest: "{{ lookup('env', 'CUSTOM_HOME') }}/ros2-node-shim/ca/token_shim.txt"
         mode: '0644'
     
     - name: Copy token key to target node
       copy:
         content: "{{ token_key }}"
-        dest: HOMEPATH/ros2-node-shim/ca/token_key_ctrl.txt
+        dest: "{{ lookup('env', 'CUSTOM_HOME') }}/ros2-node-shim/ca/token_key_ctrl.txt"
         mode: '0644'

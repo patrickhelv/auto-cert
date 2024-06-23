@@ -4,12 +4,12 @@ metadata:
   name: host-pv
 spec:
   capacity:
-    storage: 1Gi
+    storage: 100Mi
   volumeMode: Filesystem
   accessModes:
     - ReadWriteOnce
   persistentVolumeReclaimPolicy: Retain
   storageClassName: manual
   hostPath:
-    path: /home/pitemp/ansible-vault
+    path: HOMEPATH/ansible-vault
     type: DirectoryOrCreate

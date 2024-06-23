@@ -40,7 +40,7 @@ Then we need to create 3 files configfile.txt and password.txt (that holds the v
 ```
 
 ```txt
-VAULT_PATH = /mnt/
+VAULT_PATH = /mnt/ansible-vault/
 VAULT_PASS = /root/config/password.txt
 PLAYBOOK_OPTION = bool (OPTIONAL) 
 ```
@@ -191,7 +191,7 @@ docker-compose build
 docker-compose up
 ```
 
-### How to run on kubernetes on a single node
+### How to run on kubernetes in a cluster
 
 
 see guide on how to make your own local registry [here](/Create%20local%20container%20registry.md).
@@ -203,18 +203,59 @@ docker tag my-image localhost:5001/my-image:tag
 docker push localhost:5001/my-image:tag
 ```
 
-```bash
-cd /charts
-kubectl apply -f deployment.yaml
+You need to change your persistant-volume to your homepath
+```
+cd charts/
+nano persistant-volume.yaml
 ```
 
-### How to run on kubernetes in a cluster
+Change the ``HOMEPATH`` to you actual home path in your system found on ~/.
+
+```yaml
+  hostPath:
+    path: HOMEPATH/ansible-vault
+    type: DirectoryOrCreate
+```
+
+```bash
+kubectl apply -f persistant-volume.yaml
+kubectl apply -f volume-claim.yaml
+```
+
+Now we need to deploy the different resources
 
 ```bash
 cd /charts
-kubectl apply -f persistant-volume.yaml
-kubectl apply -f volume-claim.yaml
-kubectl apply -f deploymentMultiNode.yaml
+nano deployment.yaml
+```
+
+Then you need to configure your core-dns chart 
+
+```bash
+nano core-dns.yaml 
+```
+Then you need to change some values in the yaml file, change ``IP`` to the real 
+ip address you are using in your cluster.
+
+```yaml
+        hosts {
+            IP host1.local
+            IP host2.local
+            IP host3.local
+            fallthrough
+        }
+```
+
+you need to modify the ssh-volume, change the ``HOMEPATH`` to your actual home path.
+```yaml
+      - name: ssh-volume
+        hostPath:
+          path: HOMEPATH/.ssh
+          type: DirectoryOrCreate
+```
+
+```bash
+kubectl apply -f deployment.yaml
 ```
 
 ### How to deploy secrets.yaml

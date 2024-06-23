@@ -47,7 +47,10 @@ func checkAndUpdateToken(msg string, path string, cfg *utility.Config, playbookc
 			}
 
 			if playbookconf{
-				utility.ExecutePlayBook("token-refresh", msg)
+				err := utility.ExecutePlayBook("token-refresh", msg)
+				if err != nil{
+					fmt.Printf("error could not execute playbook with error, %v\n", err)
+				}
 			}
 		}
 	}
@@ -125,7 +128,10 @@ func checkAndUpdateCertificates(msg, path string, cfg *utility.Config, playbookc
 			}
 
 			if playbookconf{
-				utility.ExecutePlayBook("cert-refresh", msg)
+				err := utility.ExecutePlayBook("cert-refresh", msg)
+				if err != nil{
+					fmt.Printf("error could not execute playbook with error, %v\n", err)
+				}
 			}
 		}
 	}
@@ -253,6 +259,8 @@ func generateCertificatesFirstTime(path string, msg string, cfg *utility.Config,
 		}
 	}
 
+
+
 	return true
 }
 
@@ -280,6 +288,7 @@ func main() {
 
 	if path == "" && msg == ""{
 		config, err := utility.FetchConfigFile("/root/config/configfile.txt")
+		fmt.Println(config)
 
 		if err != nil {
 			fmt.Println("Error reading the config file")
@@ -294,6 +303,8 @@ func main() {
 			playbookconf,_ = strconv.ParseBool(config[2])
 		}
 
+		fmt.Println(playbookconf)
+
 		ENV = false
 
 	}else{
@@ -302,6 +313,8 @@ func main() {
 	}
 
 	cfg, err := utility.ReadCertConfig("/root/config/configcerts.ini")
+
+	fmt.Println(cfg)
 
 	if err != nil{
 		fmt.Printf("there was an error reading the cert config file %v", err)
@@ -348,6 +361,17 @@ func main() {
 		status := generateCertificatesFirstTime(path, msg, cfg, caCert, caKey, caCertificateBytes)
 		if !status{
 			return
+		}
+
+		if playbookconf{
+			err := utility.ExecutePlayBook("cert-refresh", msg)
+			if err != nil{
+				fmt.Printf("error could not execute playbook with error, %v\n", err)
+			}
+			err = utility.ExecutePlayBook("token-refresh", msg)
+			if err != nil{
+				fmt.Printf("error could not execute playbook with error, %v\n", err)
+			}
 		}
 	}
 

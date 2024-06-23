@@ -13,9 +13,12 @@ RUN CGO_ENABLED=0 GOOS=linux go build -a -installsuffix cgo -o autocert .
 
 FROM alpine:latest
 
-RUN apk add --no-cache ansible
+RUN apk update && \
+    apk add --no-cache ansible openssh
 
 WORKDIR /root/
+
+ENV CUSTOM_HOME=/home/pitemp
 
 COPY --from=builder /app/autocert .
 COPY config /root/config

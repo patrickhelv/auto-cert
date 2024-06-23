@@ -2,31 +2,31 @@
   hosts: shim_2
   become: yes  # Use sudo to become root
   vars_files:
-    - ~/ansible-vault/client_cert_shim_2.yaml
-    - ~/ansible-vault/client_key_shim_2.yaml
-    - ~/ansible-vault/server_cert_shim_2.yaml
-    - ~/ansible-vault/server_key_shim_2.yaml
+    - /mnt/ansible-vault/client_cert_shim_2.yaml
+    - /mnt/ansible-vault/client_key_shim_2.yaml
+    - /mnt/ansible-vault/server_cert_shim_2.yaml
+    - /mnt/ansible-vault/server_key_shim_2.yaml
   tasks:
     - name: Copy client certificate to the target nodes
       copy:
         content: "{{ client_cert }}"
-        dest: HOMEPATH/ros2-node-shim/ca/client_cert_shim_2.txt
+        dest: "{{ lookup('env', 'CUSTOM_HOME') }}/ros2-node-shim/ca/client_cert_shim_2.txt"
         mode: '0644'
     
     - name: Copy client key to the target nodes
       copy:
         content: "{{ client_key }}"
-        dest: HOMEPATH/ros2-node-shim/ca/client_key_shim_2.txt
+        dest: "{{ lookup('env', 'CUSTOM_HOME') }}/ros2-node-shim/ca/client_key_shim_2.txt"
         mode: '0644'
 
     - name: Copy server certificate to the target nodes
       copy:
         content: "{{ server_cert }}"
-        dest: HOMEPATH/ros2-node-shim/ca/server_cert_shim_2.txt
+        dest: "{{ lookup('env', 'CUSTOM_HOME') }}/ros2-node-shim/ca/server_cert_shim_2.txt"
         mode: '0644'
 
     - name: Copy server key to the target nodes
       copy:
         content: "{{ server_key }}"
-        dest: HOMEPATH/ros2-node-shim/ca/server_key_shim_2.txt
+        dest: "{{ lookup('env', 'CUSTOM_HOME') }}/ros2-node-shim/ca/server_key_shim_2.txt"
         mode: '0644'

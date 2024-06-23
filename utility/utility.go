@@ -267,7 +267,7 @@ func DecodeYamlCertCa(filePath string) (string, error) {
 
 	data, err := os.ReadFile(filePath)
 	if err != nil {
-		fmt.Printf("error reading file: %v", err)
+		fmt.Printf("error reading file: %v\n", err)
 		return "", err
 	}
 
@@ -286,7 +286,7 @@ func DecodeYamlClientCert(filePath string) (string, error) {
 
 	data, err := os.ReadFile(filePath)
 	if err != nil {
-		fmt.Printf("error reading file: %v", err)
+		fmt.Printf("error reading file: %v\n", err)
 		return "", err
 	}
 
@@ -305,7 +305,7 @@ func DecodeYamlServerCert(filePath string) (string, error) {
 
 	data, err := os.ReadFile(filePath)
 	if err != nil {
-		fmt.Printf("error reading file: %v", err)
+		fmt.Printf("error reading file: %v\n", err)
 		return "", err
 	}
 
@@ -324,7 +324,7 @@ func DecodeYamlCaKey(filePath string) (string, error) {
 
 	data, err := os.ReadFile(filePath)
 	if err != nil {
-		fmt.Printf("error reading file: %v", err)
+		fmt.Printf("error reading file: %v\n", err)
 		return "", err
 	}
 
@@ -343,7 +343,7 @@ func DecodeYamlClientKey(filePath string) (string, error) {
 
 	data, err := os.ReadFile(filePath)
 	if err != nil {
-		fmt.Printf("error reading file: %v", err)
+		fmt.Printf("error reading file: %v\n", err)
 		return "", err
 	}
 
@@ -362,7 +362,7 @@ func DecodeYamlTokenKey(filePath string) (string, error) {
 
 	data, err := os.ReadFile(filePath)
 	if err != nil {
-		fmt.Printf("error reading file: %v", err)
+		fmt.Printf("error reading file: %v\n", err)
 		return "", err
 	}
 
@@ -381,7 +381,7 @@ func DecodeToken(filePath string) (string, error) {
 
 	data, err := os.ReadFile(filePath)
 	if err != nil {
-		fmt.Printf("error reading file: %v", err)
+		fmt.Printf("error reading file: %v\n", err)
 		return "", err
 	}
 
@@ -423,10 +423,10 @@ func ExecutePlayBook(category string, vaultPasswordFile string) (error){
 	var cmds []*exec.Cmd
 	
 	if category == "token-refresh"{
-		cmds =  append(cmds, exec.Command("ansible-playbook", "./playbooks/token_update_task.yaml", "--vault-password-file", vaultPasswordFile))
+		cmds =  append(cmds, exec.Command("ansible-playbook", "/root/playbooks/token_update_task.yaml", "--vault-password-file", vaultPasswordFile))
 	}else if category == "cert-refresh"{
-		// cmds =  append(cmds, exec.Command("ansible-playbook", "./playbooks/shim_1_task.yaml", "--vault-password-file", vaultPasswordFile))
-		cmds = append(cmds, exec.Command("ansible-playbook", "./playbooks/shim_2_task.yaml", "--vault-password-file", vaultPasswordFile))
+		// cmds =  append(cmds, exec.Command("ansible-playbook", "/root/playbooks/shim_1_task.yaml", "--vault-password-file", vaultPasswordFile))
+		cmds = append(cmds, exec.Command("ansible-playbook", "/root/playbooks/shim_2_task.yaml", "--vault-password-file", vaultPasswordFile))
 	}
 	 
 	for _, cmd := range cmds {
@@ -435,6 +435,7 @@ func ExecutePlayBook(category string, vaultPasswordFile string) (error){
             return fmt.Errorf("failed to execute playbook %s: %v", category, err)
         }
     }
+	
  
 	return nil
 }
