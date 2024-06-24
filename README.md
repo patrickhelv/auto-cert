@@ -134,7 +134,14 @@ NAME: token_shim
 KEYNAME: token_key_shim
 ```
 
-Look at the diagram to better understand the controller/shim authentication [here](/docs/authentication.excalidraw.png)
+
+If you use the ros2 shim and controller repositories https://gitlab.stud.idi.ntnu.no/master-thesis-ros2-k3s/ros2-node-shim and
+https://gitlab.stud.idi.ntnu.no/master-thesis-ros2-k3s/ros-2-custom-crd. You anc look at the diagram to better understand the controller/shim authentication flow [here](/docs/authentication.excalidraw.png). 
+
+If using those projects you need to create a certificate server and key for the server grpc in the controller wit Common name = DNS/IP of the controller host. This is required to authenticate all the ros 2 shim and register them as legitimate nodes. And at the same time on the shim side you 
+need a client certificate with your key alongside the ca certificate to authenticate itself to the grpc server in the controller. It sends a token that terminates the authentication flow. If the token is legitimate the shim receives a port from the controller so it can initate its own grpc server.
+
+In the second stage the shim disconnects from the controller and starts a new grpc server using its generated server certificate and key with Common name = DNS/IP of the shim and on the port given by the controller. The controller then queries and attempts to authenticate itself using the port and on the same IP/DNS address it received during the controller authentication. It uses  its own client certificate, key and ca certificate. The shim authenticates itself to the controller. The controller subsquently sends a register request alongside a token. This token is then validated on the shim, and if validated, it enables the controller to use all the grpc functions on the shim. 
 
 ### Running the auto deploy using ansible playbooks
 
