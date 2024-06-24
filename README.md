@@ -134,6 +134,8 @@ NAME: token_shim
 KEYNAME: token_key_shim
 ```
 
+Look at the diagram to better understand the controller/shim authentication [here](/docs/authentication.excalidraw.png)
+
 ### Running the auto deploy using ansible playbooks
 
 Before activating and running automatically the playbooks you need to modify some options
