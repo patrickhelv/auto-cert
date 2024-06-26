@@ -5,6 +5,18 @@
     - /mnt/ansible-vault/token_shim.yaml
     - /mnt/ansible-vault/token_key_ctrl.yaml
   tasks:
+    - name: Create /ros2-node-shim directory if it does not exist
+      file:
+        path: "{{ lookup('env', 'CUSTOM_HOME') }}/ros2-node-shim"
+        state: directory
+        mode: '0755'
+
+    - name: Create ros2-node-shim/ca directory if it does not exist
+      file:
+        path: "{{ lookup('env', 'CUSTOM_HOME') }}/ros2-node-shim/ca"
+        state: directory
+        mode: '0755'
+        
     - name: Copy token to target node
       copy:
         content: "{{ token }}"
