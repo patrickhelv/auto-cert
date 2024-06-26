@@ -425,7 +425,7 @@ func ExecutePlayBook(category string, vaultPasswordFile string) (error){
 	if category == "token-refresh"{
 		cmds =  append(cmds, exec.Command("ansible-playbook", "/root/playbooks/token_update_task.yaml", "--vault-password-file", vaultPasswordFile))
 	}else if category == "cert-refresh"{
-		// cmds =  append(cmds, exec.Command("ansible-playbook", "/root/playbooks/shim_1_task.yaml", "--vault-password-file", vaultPasswordFile))
+		cmds =  append(cmds, exec.Command("ansible-playbook", "/root/playbooks/shim_1_task.yaml", "--vault-password-file", vaultPasswordFile))
 		cmds = append(cmds, exec.Command("ansible-playbook", "/root/playbooks/shim_2_task.yaml", "--vault-password-file", vaultPasswordFile))
 	}
 	 
