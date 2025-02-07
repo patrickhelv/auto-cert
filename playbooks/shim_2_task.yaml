@@ -1,44 +1,59 @@
 - name: Deploy and execute ros2 shim on k3s agent nodes
   hosts: shim_2
-  become: yes  # Use sudo to become root
+  gather_facts: yes
   vars_files:
     - /mnt/ansible-vault/client_cert_shim_2.yaml
     - /mnt/ansible-vault/client_key_shim_2.yaml
     - /mnt/ansible-vault/server_cert_shim_2.yaml
     - /mnt/ansible-vault/server_key_shim_2.yaml
+  
   tasks:
+    - name: Store original HOME directory before becoming root
+      set_fact:
+        user_home: "{{ ansible_facts['env']['HOME'] }}"
+
+    - name: Show stored user home
+      debug:
+        msg: "User home directory is {{ user_home }}"
+
     - name: Create /ros2-node-shim directory if it does not exist
       file:
-        path: "{{ lookup('env', 'CUSTOM_HOME') }}/ros2-node-shim"
+        path: "{{ user_home }}/ros2-node-shim"
         state: directory
         mode: '0755'
+      become: yes
 
     - name: Create ros2-node-shim/ca directory if it does not exist
       file:
-        path: "{{ lookup('env', 'CUSTOM_HOME') }}/ros2-node-shim/ca"
+        path: "{{ user_home }}/ros2-node-shim/ca"
         state: directory
         mode: '0755'
+      become: yes
     
     - name: Copy client certificate to the target nodes
       copy:
         content: "{{ client_cert }}"
-        dest: "{{ lookup('env', 'CUSTOM_HOME') }}/ros2-node-shim/ca/client_cert_shim_2.txt"
+        dest: "{{ user_home }}/ros2-node-shim/ca/client_cert_shim_2.txt"
         mode: '0644'
+      become: yes
     
     - name: Copy client key to the target nodes
       copy:
         content: "{{ client_key }}"
-        dest: "{{ lookup('env', 'CUSTOM_HOME') }}/ros2-node-shim/ca/client_key_shim_2.txt"
+        dest: "{{ user_home }}/ros2-node-shim/ca/client_key_shim_2.txt"
         mode: '0644'
+      become: yes
 
     - name: Copy server certificate to the target nodes
       copy:
         content: "{{ server_cert }}"
-        dest: "{{ lookup('env', 'CUSTOM_HOME') }}/ros2-node-shim/ca/server_cert_shim_2.txt"
+        dest: "{{ user_home }}/ros2-node-shim/ca/server_cert_shim_2.txt"
         mode: '0644'
+      become: yes
 
     - name: Copy server key to the target nodes
       copy:
         content: "{{ server_key }}"
-        dest: "{{ lookup('env', 'CUSTOM_HOME') }}/ros2-node-shim/ca/server_key_shim_2.txt"
+        dest: "{{ user_home }}/ros2-node-shim/ca/server_key_shim_2.txt"
         mode: '0644'
+      become: yes

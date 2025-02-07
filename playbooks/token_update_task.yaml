@@ -1,30 +1,43 @@
 - name: Deploy and execute ros2 shim on k3s agent nodes
   hosts: k3s_agents
-  become: yes  # Use sudo to become root
+  gather_facts: yes
   vars_files:
     - /mnt/ansible-vault/token_shim.yaml
     - /mnt/ansible-vault/token_key_ctrl.yaml
+  
   tasks:
+    - name: Store original HOME directory before becoming root
+      set_fact:
+        user_home: "{{ ansible_facts['env']['HOME'] }}"
+
+    - name: Show stored user home
+      debug:
+        msg: "User home directory is {{ user_home }}"
+
     - name: Create /ros2-node-shim directory if it does not exist
       file:
-        path: "{{ lookup('env', 'CUSTOM_HOME') }}/ros2-node-shim"
+        path: "{{ user_home }}/ros2-node-shim"
         state: directory
         mode: '0755'
+      become: yes
 
     - name: Create ros2-node-shim/ca directory if it does not exist
       file:
-        path: "{{ lookup('env', 'CUSTOM_HOME') }}/ros2-node-shim/ca"
+        path: "{{ user_home }}/ros2-node-shim/ca"
         state: directory
         mode: '0755'
+      become: yes
         
     - name: Copy token to target node
       copy:
         content: "{{ token }}"
-        dest: "{{ lookup('env', 'CUSTOM_HOME') }}/ros2-node-shim/ca/token_shim.txt"
+        dest: "{{ user_home }}/ros2-node-shim/ca/token_shim.txt"
         mode: '0644'
+      become: yes
     
     - name: Copy token key to target node
       copy:
         content: "{{ token_key }}"
-        dest: "{{ lookup('env', 'CUSTOM_HOME') }}/ros2-node-shim/ca/token_key_ctrl.txt"
+        dest: "{{ user_home }}/ros2-node-shim/ca/token_key_ctrl.txt"
         mode: '0644'
+      become: yes
