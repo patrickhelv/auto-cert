@@ -33,7 +33,7 @@ mkdir config
 cd config
 ```
 
-Then we need to create 3 files configfile.txt and password.txt (that holds the vault password) and configcerts.ini
+We need to create 3 files configfile.txt and password.txt (that holds the vault password) and configcerts.ini
 
 ```bash
 [nano or nvim] configfile.txt
@@ -55,7 +55,7 @@ write your password in this file of course without brackets
 [YOUR ansible-vault PASSWORD] 
 ```
 
-We know create the configcerts.ini file
+We now create the configcerts.ini file
 
 ```bash
 [nano or nvim] configcerts.ini
@@ -190,7 +190,6 @@ You should now be good to go and activate the ``PLAYBOOK_OPTION`` in the configf
 
 ### Docker
 
-You need to change this line ``ENV CUSTOM_HOME=`` and add your homepath on your nodes in your cluster.
 ```
 nano dockerfile
 ```
