@@ -4,10 +4,10 @@ WORKDIR /app
 
 COPY go.mod go.sum ./
 
-RUN go mod download
-RUN go mod tidy
+RUN go mod download \ 
+go mod tidy
 
-COPY . .
+COPY /ca-gen /cert-gen /certificate /client-gen /token-gen /utility /vault main.go ./    
 
 RUN CGO_ENABLED=0 GOOS=linux go build -a -installsuffix cgo -o autocert .
 
@@ -18,12 +18,11 @@ RUN apk update && \
 
 WORKDIR /root/
 
-ENV CUSTOM_HOME=
-
 COPY --from=builder /app/autocert .
+
 COPY config /root/config
 COPY ansible.cfg /root/
 COPY inventory /root/inventory
 COPY playbooks /root/playbooks
 
-CMD ["./autocert"]
+ENTRYPOINT ["./autocert"]

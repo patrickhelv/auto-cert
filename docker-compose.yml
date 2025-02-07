@@ -2,4 +2,4 @@ services:
   autocert:
     build: .
     volumes:
-      - /home/pitemp/ansible-vault/:/mnt/
+      - ${HOME}/ansible-vault/:/mnt/
