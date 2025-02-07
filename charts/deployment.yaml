@@ -37,6 +37,7 @@ spec:
       - name: ansible-vault-volume
         persistentVolumeClaim:
           claimName: host-pvc
+        defaultMode: 0644
       - name: ssh-volume
         hostPath:
           path: HOMEPATH/.ssh
